@@ -1,0 +1,918 @@
+Recent changes:
+	Debugged new submit_job.
+
+	Changed molecular dynamics validator to ignore all filetypes but mdout.
+
+	Added missing sqrt of variance variable when saving variance to the data summary XML tree.
+	
+Last git log:	
+	
+commit 959a5a437c48136e767ca3d1383647ba75e36e8a
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Dec 10 09:48:38 2010 -0600
+
+    Changed clean temporary files routine to use a view in the sql database that
+    gives all of the temporary files for the process. clean temporary files
+    will now remove all temporary files and remove the temporary subdirectory
+    if it is empty.
+
+commit 500feea8cc9b91ffd4070b75df6ecf9781e3724c
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Dec 9 10:35:39 2010 -0600
+
+    Added the missing process id to set_file_info.
+
+commit 1d47d05cc43fcddcd4b47b1be8887209f28cd6cd
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Dec 9 09:54:16 2010 -0600
+
+    Fixed typo in SQL query in db_config.cpp
+
+commit 5d0d036a77caa7f5b74353be2f949917c9d2700d
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Dec 9 09:44:15 2010 -0600
+
+    Added code to identify the process which created an output file of
+    molecular dynamics.
+
+commit e237e8ec1067e4215ad2ac23ce7caaf9ac233cd7
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Dec 8 13:49:23 2010 -0600
+
+    Changed submit_job to insert MMPBSA runs after each MD segment.
+    There is no need to wait for all MD segments to finish, as snapshots
+    are independent as far as MMPBSA is concerned.
+
+commit 6877fd98d2e99ea7f8d60a954e4dd0679498b638
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Dec 7 15:30:28 2010 -0600
+
+    Fixed problem of ntwx = 0 possibility in sander_segment_count (submit_job.cpp).
+    This could, for example, happen with (non-minimization) calculations where
+    a trajectory file is not created.
+
+commit beab2cbc317558470adf43665a62bec14e24391a
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Dec 7 14:00:28 2010 -0600
+
+    Fixed typo.
+
+commit 97ef51843e15d071675a95cd8d6d38c17a1e796a
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Dec 7 12:51:44 2010 -0600
+
+    Fixed the md segmenter to ensure:
+    1.) all segment nstlim values evenly divide into the series nstlim value.
+    2.) ntwr = nstlim so that clients will always produce a restart file
+    	when they finish.
+    3.) segment nstlim values are a multiple of ntwx.
+
+commit 5f9c1ba152a5ce965bb569084d7a7a37d7888bdb
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Dec 6 15:38:44 2010 -0600
+
+    Added new version of submit job process (using indexed tree to
+    map input files) to master branch, thus incrementing the major
+    version number.
+
+commit ff0e822f18fd308dfd3c3fb70550a0086314010e
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Dec 6 08:47:45 2010 -0600
+
+    Added code to print time estimates (need to refine time values)
+    when git list job# is called.
+
+commit 974385db88f50fab4de46d8d5062ed5fd03d65ed
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Nov 22 13:14:29 2010 -0600
+
+    Added a sort routine to combine_mmpbsa. This will sort the snapshots
+    according to "ID" tags.
+
+commit 0767d38f74433652bdf04ee24c53c1948e7e36ad
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Nov 22 09:21:46 2010 -0600
+
+    Fixed a hole in validate_moledyn that allowed empty mdout files
+    to be considered valid, thus adding an "EMPTY_FILE" validation
+    state.
+
+commit 1c05e3de11f8a57de3618d9895f0a276b7e730e0
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Nov 19 09:50:00 2010 -0600
+
+    Added and revised documentation.
+
+commit a59941bee9196820f17240a509f2ddbc9edac4d4
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Nov 19 08:25:13 2010 -0600
+
+    Made cosmetic changes to "grid_master status"
+
+commit 5ecf9cbcceceec58892e883e4356bb02d887982e
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Nov 18 08:45:28 2010 -0600
+
+    Added gflop estimation to MDParams, which is pass along to the
+    queue database to be used in the rsc limits of the BOINC workunit.
+    
+    Changed submit_job so that an MD run with constant pressure *and*
+    restraints does not get segmented. Restarting in the middle of these
+    types of runs can cause vlimit errors. It is better to simply let
+    them run.
+
+commit 34fb53b3b3156ad524c38bcdde260b375b948d06
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Tue Nov 16 16:15:00 2010 -0600
+
+    More debugging. Added recombine_mmpbsa process.
+
+commit b5e51059ddbd59dcaed42fa7420b28d2d1daf221
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Nov 15 16:21:15 2010 -0600
+
+    Debugging recombination process.
+
+commit 798b26467b3b855c07a6993a4b829cd41fae21ac
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Nov 12 16:02:34 2010 -0600
+
+    Added a recombination process to the queue system. To handle
+    recombining segments of process results.
+
+commit d7f000f956eee1051f9ebf4b17aa4be2f33b30dd
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Nov 11 16:11:07 2010 -0600
+
+    Completed one mmpbsa run with the new changes to the structure of
+    submit_job and grid_master.
+
+commit 7412e4c89518f7d5786ef47a1df86450e4be9bd8
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Nov 11 09:10:13 2010 -0600
+
+    Ran on grid and made changes as needed.
+    
+    mdcrd files of "parallelized" branches need to be recombined before
+    mmpbsa runs.
+
+commit 1aaa79d69e18b7f4793efaec868daf09a134cd0c
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Nov 10 13:45:37 2010 -0600
+
+    Implemented changes to grid tools that include more data abstraction
+    for the file naming information.
+
+commit e4f49455dad88f0cdba64c31b3df4f602b9ae9e9
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Nov 9 16:10:12 2010 -0600
+
+    Started a new version of submit_job that uses an indexed list of
+    files for processes. Hopefully this will help will the different
+    names of files that exists between the user's directory, the
+    temporary directory and the boinc directory.
+    
+    Next this should be put into a shared library so it can be used
+    by other programs.
+
+commit 37447ae052377119c5e19ab1c7a6e24b38f90a20
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Nov 5 15:53:07 2010 -0500
+
+    Added separate header files for new argp structures.
+
+commit f8a267a5b1709fcb6eb9251e05299ddab1c774e7
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Nov 5 15:51:30 2010 -0500
+
+    Tested changes on the grid.
+
+commit 732e5b42b21c11e0be6b380c994123e1c381bc54
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Nov 5 14:06:46 2010 -0500
+
+    Changed submit_job to subdivide sander MD runs based on flop count
+    rather than set NSTLIM values. Flop count is based on curve fitting
+    flop counts to cut off, natoms and nstlim values from previous
+    results.
+
+commit 7baddddcb52c209d2973a6cbf789ccd423b8e25a
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Nov 4 09:37:29 2010 -0500
+
+    Tweaked grid_tools while using them on the grid.
+
+commit a73da848331e75ec7b29770ddef9dfb80741f4cd
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Oct 28 09:58:12 2010 -0500
+
+    Incremented revision number to mark the change of the last commit
+    (and its sucessful use on the server).
+
+commit 2565999e3c450b0a640bcc704d2d1edae901486a
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Oct 28 09:30:01 2010 -0500
+
+    Added a catch for a failed boinc_copy in the assimilator (eg when the
+    user does not give the grid manager permission to write). In this case,
+    the result files are written to a "bad result" subdirectory of the project
+    directory. Now the user will have to contact the admin to get the files,
+    at which time the admin can setup correct file permissions.
+
+commit 2fa496137fd7025292c52d12466fcfe6fc023727
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Oct 27 15:49:40 2010 -0500
+
+    Increment version number to mark the (working) feature of the
+    program "gsub" for users to use to submit work to the grid.
+
+commit d25ed2fa97d898a6a87524e704c60f175a4d5510
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Wed Oct 27 15:51:18 2010 -0500
+
+    Tested on the grid. Works.
+
+commit 86cc99dcc7f3349a4b71bfd1afc40031ea6289d2
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Oct 27 14:32:44 2010 -0500
+
+    Forgot the gsub.cpp file in the last commit :-/
+
+commit f3116420d4d55e9ab57e20f490be65dbac150878
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Oct 27 14:30:44 2010 -0500
+
+    	Added a program (gsub) that should be used by most users
+    to submit jobs. This program combines the function of submit_job
+    grid_master.
+    
+            Grid_master now checks uid's to ensure people only manage
+    their own processes on the grid. Probably should add admin gid
+    checks later; for now admins can manage the database directly.
+
+commit 3ec7f3c60f578cbbe0fd696cf58864b93250014b
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Tue Oct 19 11:11:01 2010 -0500
+
+    Updated doxyfile and submit_job.cpp
+
+commit 67cfc63d50fd1ef5dc1247aebfcc252824a95fef
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Oct 19 10:56:22 2010 -0500
+
+    Increment version number.
+    
+    Created a template doxygen file
+
+commit 68c95a9891a57ed868e9c96d13b01b618da183c1
+Merge: 5b19284 3d803c6
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Oct 19 10:48:27 2010 -0500
+
+    Merge branch 'master' of ssh://stjudeathome2/boinc/grid_tools into clean_code_for_public
+
+commit 5b19284d614911311dcff3377f6195730736e5c2
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Oct 19 10:48:06 2010 -0500
+
+    Added a lot of documentation.
+
+commit 3d803c6789f541408e01a9164e6ef9789c5be0a1
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Tue Oct 19 10:33:04 2010 -0500
+
+    Specified appname and appid in grid_master.cpp
+
+commit d5a23736a857babf3c56b6bc7d4cce4833502f17
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Oct 19 08:35:34 2010 -0500
+
+    Shortened close_wu in grid_master.cpp.
+    
+    Required assimilate_mdmmpbsa.cpp to use abortProcess upon failure.
+
+commit 1dfff144a9fe1617a67fd1bfe11cc1a4da590c01
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 18 16:15:25 2010 -0500
+
+    queue system will now tar-gzip all raw data.
+
+commit ba438d5369cb9e6e00e1e368dd33129bd0c5ee5c
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 18 12:54:02 2010 -0500
+
+    Moved sibling starting code in manage_process to the correct spot.
+
+commit 54a5ebc8593eeeb3905dc87b04c8341de3c4450f
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 12:48:29 2010 -0500
+
+    grid_master will now start all sibling processes of the process
+    given to start.
+
+commit 4276ebac71635d90bf3becbd81352d96ac74fe95
+Merge: fd22001 536a5fe
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 12:30:55 2010 -0500
+
+    Merge branch 'master' of ssh://stjudeathome2/boinc/grid_tools into clean_code_for_public
+
+commit fd220019b61b5835e632a4612ccdd9e913f72ad0
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 12:30:12 2010 -0500
+
+    Working on documentation. Need to merge changes from server.
+
+commit 536a5fec07c595fe252a90fee898fef9ab87a1cc
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 18 12:29:07 2010 -0500
+
+    Fixed incorrect logic in all_processes_finished in grid_master.cpp
+
+commit 207a6ba1bd4b2e4bae3ee72c592c67844d5239fb
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 11:02:51 2010 -0500
+
+    Added something left out of the last commit.
+
+commit 0b9979b50dbe8b218cb9321c3018b6f1312d4565
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 11:00:52 2010 -0500
+
+    Corrected an error in the number of snapshots in validateMoledynWorker.
+
+commit a07ae60c82b0348d8838442207703637b95f5fa7
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 10:30:52 2010 -0500
+
+    grid_master: Added ability to close work units after all of the process are out
+    of the waiting status.
+
+commit 53c2dd0c65c2c6ff20f3fd1a0b6374f2dd4efa7c
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 18 10:01:28 2010 -0500
+
+    Tested new tar gzip routines on the grid. worked well
+
+commit d601dc388c7ea545fff72d75ffd861b36905aea5
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 09:07:51 2010 -0500
+
+    Changed Zipper::tar to allow the user to specify the prefix of the files
+    in the tar file.
+
+commit 963a927a1c9f3e7fc31f2c5dec243e87c0f0c4df
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 18 08:54:33 2010 -0500
+
+    Fixed filename reference error in Zipper.
+
+commit 358751a7aa41a156c1cc1b0d97662dc5be2def88
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Oct 15 15:55:32 2010 -0500
+
+    Tested changes on grid. Zipper needs work.
+
+commit a5c729d243071a73378c314d8682fa4a77496ac9
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Oct 15 14:34:28 2010 -0500
+
+    Added file compression.
+    
+    Grid_master will now save all files created by the grid system
+    as one tar-gzip file.
+
+commit 762480a94a51276e2a42993bfdf727f8b7e7d22f
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Oct 13 15:41:37 2010 -0500
+
+    Increment version number to mark the point when the queue system
+    will handle jobs from submission to assimilation.
+
+commit e3e2278c91e4bbbf470320117ec1e4543b5db88e
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Wed Oct 13 15:38:48 2010 -0500
+
+    Tested and Debugged queue system.
+    System will queue, validate and assimilate md and/or mmpbsa.
+
+commit 7b5b6ecfb73c35ac77a79d308e3879e4341a8148
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Oct 12 13:15:28 2010 -0500
+
+    Updated submit_job for changes to queue system.
+    
+    Changed the structure of MDParams to handle multiple namelists
+    in mdin files.
+
+commit 5519165298339d3789c10ee72add18b339ccb3dc
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Tue Oct 12 08:27:16 2010 -0500
+
+    Updating molecular dynamics parallelization.
+
+commit b2587db559de6693fda8bff15523ad218812b19b
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 11 15:36:51 2010 -0500
+
+    Added "moledyn" to the list of know applications for submit_job::parallelize_queue
+
+commit 792b424ed19b8df36a8ecc769734fedd6e41321e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 11 15:28:00 2010 -0500
+
+    Allowed combine_sander_data to concatenate files.
+
+commit f23edd39f25472ea2dee1e2518f655573a3bd86e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 11 14:50:45 2010 -0500
+
+    Started updating validate_moledyn.cpp for changes to file name conventions
+    in the queue system (i.e. job id, batch id)
+
+commit 734c9275980a5d8cd99a5317e26b952767702421
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 11 14:31:48 2010 -0500
+
+    Fixed validate_moledyn to correctly read mdout files.
+
+commit ac229bf9211af5136cbef79589b5bd18e8c0cee2
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 11 13:10:31 2010 -0500
+
+    Cleaned up the build process when boinc is not used.
+
+commit 3415cf31418d2e38b24671015c8de3c27747be90
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 11 09:46:15 2010 -0500
+
+    Tested grid queue system.
+    
+    System can now submit a job using submit_job. grid_master can then start
+    the process, which will start following processes. After all processes
+    have ended, files are recombined automatically.
+
+commit 78ed1056534350cf379c1eedf7424b72f52f0801
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Oct 8 13:31:07 2010 -0500
+
+    Gave grid_master the ability to copy boinc files.
+    
+    grid_master will now copy files when spawn_wu is called.
+    This is done so that if a job depends on the files produced
+    by a previous job, it will only be submitted after that job
+    has finished, thereby preventing the case where we try to copy
+    a file that has no yet been created.
+
+commit 18a632f01bc84a201260b4fc9d2fbd44d8f6efe5
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Oct 8 11:46:53 2010 -0500
+
+    Gave grid_master the ability to combine results (either mmpbsa or MD)
+    and trigger child processes when all parent processes have finished.
+
+commit 4afbca7fa760010c4d146564157aae9178a2dbc2
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Oct 8 09:16:24 2010 -0500
+
+    Added program to combine mmpbsa data.
+
+commit 4c2c2cde36579c07db30245f614f71a4ee935379
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Thu Oct 7 15:49:49 2010 -0500
+
+    Tested last commit. Works.
+
+commit 88e887df8a6697dee0a934a5d39542d88519ac32
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Oct 7 14:53:22 2010 -0500
+
+    Added suffix to output files in order to separate segments of a
+    parallelized branch.
+
+commit 473e84bf8fa94a894a787861c9bba73a1b9fbc5f
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Wed Oct 6 11:28:51 2010 -0500
+
+    Added path resolution to BOINC assimilation, so that the result of the
+    work unit will go back into the directory from which it was submitted.
+
+commit 5c244a1b58e1c23345f83319dbd4d52a4d5d2d18
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Oct 4 14:33:47 2010 -0500
+
+    Corrected typo in SQL query in assimilate that would prevent updating of
+    process.
+    
+    Added absolute path usage in grid_master, allowing the user to run grid_master
+    anywhere (as long as there is read/write privileges to boinc's dir)
+
+commit bbc0acfabbef0527aa5c569cb56998dc71f19cba
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Oct 4 08:38:30 2010 -0500
+
+    Changed the programs to use original output filenames (with `program`_`id` prefix) instead of <OUTFILE_0>...
+
+commit c0e7940007fe2bde028a24abfbe737d24a0ba3b3
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Oct 1 16:31:27 2010 -0500
+
+    Fixed grid_master and submit_job problems with file paths.
+    
+    Need to fix output filename error and assimilator needs to
+    updated the queue system database.
+
+commit f4f04d7890afcf24fa9e16a527ace669ebcfed19
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Oct 1 11:38:50 2010 -0500
+
+    updated version
+
+commit 04a67526db0bf15672cacfd093defbff08c60d95
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Fri Oct 1 11:34:31 2010 -0500
+
+    Debugged grid_master and submit_job.
+
+commit 9dbb3805ec062442492f88b0840f3f65e92a0162
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 30 16:09:08 2010 -0500
+
+    Added code to copy input files to BOINC download path.
+
+commit fffeaa8f69e538dd6982c9322985a75857ecdcf5
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 30 15:47:21 2010 -0500
+
+    Compiled grid_tools. Testing needed.
+
+commit a3058058acae873c84a80532dc672ff99e427926
+Author: David Coss (macbook) <David.Coss@stjude.org>
+Date:   Thu Sep 30 15:34:26 2010 -0500
+
+    Added functions to create BOINC WU and Result templates.
+    
+    submit_job will now prefix filenames will the process id and unix time
+
+commit c6622247b5feabc229c0021d84467acbea579f77
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 30 13:29:11 2010 -0500
+
+    Added missing array sizes for BoincDBConn
+
+commit 3ceac6c7df29a7e32e1d4fc69ba22653956d46b3
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 30 13:16:23 2010 -0500
+
+    Added a program to assimilate BOINC work units.
+
+commit fdc734382b990303d4f1918fc88948645de618d2
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 30 08:58:36 2010 -0500
+
+    Added catch for XMLParserException in validate_mmpbsa if a file cannot
+    be read.
+    
+    Requires libmmpbsa v0.6.7
+
+commit 9beef3ff934ea75ee013d2cef0037825ee2b83f0
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Wed Sep 29 15:24:36 2010 -0500
+
+    Debugged validate_mdmmpbsa and sucessfully validated an mmpbsa result.
+
+commit 2a23afb76103708f439dd83632fb1365df3e8999
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 29 14:32:19 2010 -0500
+
+    Updated version.
+
+commit bcf6ca92b095152a6aeb6fdee5dec4aa11caed0e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 29 14:30:25 2010 -0500
+
+    Fixed mmpbsa validation function. Restructured validation_mmpbsa.cpp.
+    validation functions return arrays to statistical data if a valid
+    result is not produced. Validations state is obtained by the use of
+    a reference parameter.
+
+commit 164957df1e2ee2040ea524c40f706c4225fb1554
+Author: David Coss (macbook) <David.Coss@stjude.org>
+Date:   Wed Sep 29 13:34:33 2010 -0500
+
+    Updated project url and version for grid_manager
+
+commit 378f7e24247f95be734c097dc3cf04b3b3f31bd5
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 29 13:22:10 2010 -0500
+
+    Reorganized gridmanager directory to remove redundant "src".
+    
+    Debugging validate functions. More work to be done.
+
+commit 4d7f29eb0bb5c7d8cb4c150f619f23c7dc8083db
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Wed Sep 29 10:43:11 2010 -0500
+
+    Corrected string/char[] mismatch between result_name and getAppType
+    in validate_mdmmpbsa.cpp.
+    
+    Updated submit_job.cpp for "beta_mmpbsa".
+
+commit a77c9fc528ad5f7ed8d1cac26a1796d95c95625a
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 28 15:03:11 2010 -0500
+
+    Added application type prefix to WU name in grid_master.
+
+commit c873cd96b0af4a94a4529baa540e7efd2e0695a6
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 28 14:38:39 2010 -0500
+
+    Added validate_mdmmpbsa program which requires BOINC. This program
+    will validate results using the boinc program validate. Source
+    code for this program are included under the GNU General Public
+    License, which can be found at the beginning of those files.
+    
+    validate_mdmmpbsa compiles, but needs to be tested.
+
+commit a432c8a5fc53e049466b6928596874b443404b0d
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Sep 27 15:55:54 2010 -0500
+
+    Updated version number.
+
+commit daea1442c4e4c67d27522d59dc588c7ba39ddad5
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Sep 27 15:54:50 2010 -0500
+
+    Debugged grid_master and submit_job
+
+commit 9975e4d64ac49b81b722aad2ed25a2919469bd38
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Sep 27 10:16:33 2010 -0500
+
+    Refined library usage with BOINC.
+
+commit 64d9c7e9afa251783490428a8aebf2386edf6cf3
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Sep 27 10:10:12 2010 -0500
+
+    Updated library prerequisites for compiling with BOINC.
+
+commit 0ba0c6ba3989035b0db7be60c55e2f4b11b16cc7
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 22 08:34:19 2010 -0500
+
+    Added sanitizing methods for use with the server that has PHP version
+    < 5.2.0, which provides filer_var
+
+commit f3c6ce7e3c0ba3595bb47449157e816c0f0042f9
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 21 08:22:39 2010 -0500
+
+    Added "--version" as a command line argument to GridManager
+
+commit 3a991cc8d9b7f98df2aa69e1c2994a17d107c559
+Author: David Coss (stjudeathome2) <David.Coss@stjude.org>
+Date:   Mon Sep 20 15:48:07 2010 -0500
+
+    Added MYSQL_CFLAGS variable to autoconf/automake.
+
+commit b9e1eedbe5880fb35782f1564b68d6b6ffc19716
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Sep 20 13:31:12 2010 -0500
+
+    Added Message tag that displays client and project messages.
+
+commit 313213d14c4a7dfa72472fec882839c601585d25
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Sep 17 16:01:52 2010 -0500
+
+    Commit before weekend.
+
+commit 44771ca5cd9b4726191a2f4837245fd7ca0372ae
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 16 15:33:11 2010 -0500
+
+    Added a neat little credit tag on the Task List Tree.
+
+commit 3fd2721da131be6b869d723c7ab8f8f8d93be301
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 16 14:49:11 2010 -0500
+
+    More changes.
+
+commit d8c41f1ebdf2477f73d2c1a86a037fd1b011cf37
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 16 10:21:12 2010 -0500
+
+    Fixed Results gathering routine, which was only showing one
+    result.
+    
+    Added copying (to clipboard) of result info by double clicking.
+    
+    Removed redundant Main.java
+
+commit 937c2ab274aec2cc3a1d0ded3e4d960aba4cd145
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 15 14:22:37 2010 -0500
+
+    Started an account manager server tool (cf http://boinc.berkeley.edu/trac/wiki/AccountManagement)
+
+commit 63fa380f69357eadc2263b5a984376084c955750
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 15 14:20:13 2010 -0500
+
+    ditto
+
+commit cdc19ff75f8e4c501058236623a224409e1b46df
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 15 11:37:36 2010 -0500
+
+    Fixed RPC connect bug.
+
+commit 6a91720fbf6958f6c1eb1d1fe639739f7db5b61e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 15 09:47:19 2010 -0500
+
+    GridManager can now close a client.
+
+commit 2d8eb465a039ae049f1e25b45789e60bed94be1e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 15 09:20:47 2010 -0500
+
+    Originally, the remove button for the host list would only remove
+    the first selected host. This has been changed to remove all selected
+    hosts.
+    
+    Send command originally included a "timeout" feature where it would
+    retry sending a command if it failed. This was only needed when the
+    socket would not use the data stream correctly. Since that data
+    stream has been removed, this feature is not needed and has been
+    removed.
+
+commit ea291cc46a4a2b04c9311a17a02803488066103c
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 14 12:10:48 2010 -0500
+
+    Updated the version to match the tags.
+
+commit 1bcea669ea4a8a65ec1a70e97919321aad7f8e79
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 14 12:08:28 2010 -0500
+
+    GridManager can now suspend and resume tasks, with a right buttom popup
+    menu.
+
+commit bdc77253d9679c6007472eaf54218879807e9173
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Sep 13 16:25:57 2010 -0500
+
+    Generalized RPC XML parser handle all types of messages, not just
+    result data.
+
+commit 4e1f1a32266e7d8065dea0902887cf6be604f17f
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Sep 13 14:47:04 2010 -0500
+
+    GridManager can now attach to and detach from the computing grid.
+
+commit 36e17084d4613a2221646335c0c55a742ebfe1e0
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Sep 13 13:51:53 2010 -0500
+
+    GridManager will now show result information in a nice tree.
+    GridManager now contains a version string, which will need
+    to be updated.
+
+commit 2326510dd0895d6da6c92d83c29fa9e93c058d73
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Sep 10 16:19:15 2010 -0500
+
+    Started a task list. Need to populate this list and add controls.
+
+commit 8472b79f0331cc4b48519cb1462ec43012aa3e7e
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Sep 10 15:10:02 2010 -0500
+
+    GridManager can not authenticate to a client by sending the command:
+    <auth>hash key</auth>
+
+commit 5d62762b1de7866799ee445c98232c8148a70b71
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Sep 10 12:05:15 2010 -0500
+
+    GridManager (in java) can connect to clients and execute commands that
+    do no require authentication.
+
+commit 77f79d5938915b990e07c2ebdddfbdc044a9ebf1
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 9 16:30:48 2010 -0500
+
+    Switched from apache xml-rpc to java.net.Socket in Grid manager.
+
+commit 7d0f212d05c011bc0460aa1f75da8d4be947fd02
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Sep 7 15:39:40 2010 -0500
+
+    Removed sign program from repo.
+
+commit 93602fcff3427a3d28078461bffcc6b5e6e31ca6
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Sep 2 08:53:01 2010 -0500
+
+    Successfully tested validate_moledyn.
+
+commit ea6c4d210180e2b551dcca59adb41231887f35ef
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Sep 1 16:13:19 2010 -0500
+
+    Added combine_sander_data and validate_moledyn, both of which
+    compile but need to be tested (and have BOINC hooks added).
+    
+    Requires libmmpbsa v0.6.4+
+
+commit 5c405c0121690a4d39db54d5c5683dc6620bbb82
+Author: David Coss <David.Coss@stjude.org>
+Date:   Tue Aug 31 16:17:59 2010 -0500
+
+    Updated db_config.default.h
+    Added "running" status flag for spawn_wu() when compiled without
+    BOINC.
+    Switched the sign and verify process back to fortran for better
+    compatibility with sander. However, this is an unfinished program
+    that needs a working hash function.
+
+commit 199d5b3ff60eb8d14b858ed4689025d9dda92c7f
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Aug 30 15:30:27 2010 -0500
+
+    Fixed mdcrd -> inpcrd bug
+
+commit 84cfed5198e91568f4537522798ab9d0c05c4e5f
+Author: David Coss <David.Coss@stjude.org>
+Date:   Mon Aug 30 15:01:08 2010 -0500
+
+    Submit job will now parse input commands, split input files and
+    send jobs to the queue database.
+
+commit 4d16dea084578901c307c5ba224592f8879a38ea
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Aug 27 16:23:01 2010 -0500
+
+    Added parallelization of sander input.
+    
+    Requires libmmpbsa v0.6.3+
+
+commit cd81199dfe92a9fdb46adb544764b4d9dccaf1f8
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Aug 27 08:57:45 2010 -0500
+
+    Added submit_job to create and submit MD/MMPBSA jobs.
+    Currently, the program will take bash/sh like list of sander and
+    mmpbsa command line entries and create an XML queue file. Then
+    it will break the mmpbsa part into parallel segments of 3 snap
+    shots.
+    
+    Next step is to parallelize sander runs.
+    
+    Requires libmmpbsa v0.6.2+
+
+commit 53e914f6480402bdfe40a6944bce1039ce984cf6
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Aug 27 08:55:56 2010 -0500
+
+    Started a grid process manager program (grid_master). This is to
+    be used to manage one process in the queue, including getting
+    its status, starting the process and starting its child process.
+    
+    Requires mysql_config and mysql libraries.
+
+commit 0ec2b4518eba85dcb4afc6ed7e70d735ad41bbf4
+Author: David Coss <David.Coss@stjude.org>
+Date:   Wed Aug 25 08:10:16 2010 -0500
+
+    Switched sign from fortran to c++.
+    
+    Started a grid node manager in Java, for easy portability.
+
+commit 2c25a271da12edb989e4dfe1a908e13bd6cba273
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Aug 20 15:34:12 2010 -0500
+
+    Tested sign.f95
+
+commit 6530effe043abd1e03e87f7bafcfc847fb761786
+Author: David Coss <David.Coss@stjude.org>
+Date:   Fri Aug 20 12:05:36 2010 -0500
+
+    Successfully tested.
+    Requires libmmpbsa v0.6.1+
+
+commit f81d0c7c069e986d25f30c7f23d3cf22b9b87fc1
+Author: David Coss <David.Coss@stjude.org>
+Date:   Thu Aug 19 16:20:34 2010 -0500
+
+    Started tools to be used to manage the grid. Initially this includes
+    validation and file signing.
