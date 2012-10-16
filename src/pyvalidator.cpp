@@ -13,7 +13,7 @@
 int init_result(RESULT& result, void*& data) 
 {
   OUTPUT_FILE_INFO fi;
-  PyObject *main_module = NULL, *main_dict = NULL, *boincresult, *dag_utils_mod = NULL;
+  PyObject *main_module = NULL, *main_dict = NULL, *boincresult, *boinctools_mod = NULL;
   std::vector<std::string> *paths;
   int retval = 0;
   
@@ -52,11 +52,11 @@ int init_result(RESULT& result, void*& data)
 
   printf("Marking Process as closed.\n");
   
-  dag_utils_mod = PyImport_Import(PyString_FromString("dag_utils"));
-  if(dag_utils_mod != NULL)
+  boinctools_mod = PyImport_Import(PyString_FromString("boinctools"));
+  if(boinctools_mod != NULL)
     {
       PyObject *dict, *funct, *exception = NULL;
-      dict = PyModule_GetDict(dag_utils_mod);
+      dict = PyModule_GetDict(boinctools_mod);
       funct = PyDict_GetItemString(dict,"update_process");
       if(funct != NULL)
 	{
@@ -83,7 +83,7 @@ int init_result(RESULT& result, void*& data)
 		}
 	    }
 	}
-      Py_XDECREF(dag_utils_mod);
+      Py_XDECREF(boinctools_mod);
     }
 
   Py_Finalize();
@@ -242,7 +242,7 @@ int cleanup_result(RESULT const& r, void* data)
       exit(1);
     }
   
-  mod = PyImport_Import(PyString_FromString("dag_utils"));
+  mod = PyImport_Import(PyString_FromString("boinctools"));
   if(mod != NULL)
     {
       PyObject *dict, *funct;

@@ -3,6 +3,9 @@ boinctools
 ===========
 
 """
+
+project_path = '/boinc/projects/stjudeathome'
+
 def dump_traceback(e):
     """
     Writes traceback information to standard output.
@@ -276,8 +279,9 @@ def result_to_dag(result_name):
 
     Arguments: result_name -- String representation of the result name.
     Returns: dag.DAG object for the result
-    Raises NoDagMarkerException if the result does not have a dag marker file.
+    Raises dag_utils.NoDagMarkerException if the result does not have a dag marker file.
     """
+    import dag.util as dag_utils
     import re
     import os.path as OP
     
@@ -291,7 +295,7 @@ def result_to_dag(result_name):
     try:
         dagpath = marker_to_dagpath(marker_path)
     except IOError as ioe:
-        raise NoDagMarkerException("Missing DAG marker.\nError Message: %s\nFile: %s" % (ioe.strerror, marker_path))
+        raise dag_utils.NoDagMarkerException("Missing DAG marker.\nError Message: %s\nFile: %s" % (ioe.strerror, marker_path))
     
     dagdir = OP.split(dagpath)[0]
     try:
@@ -523,6 +527,7 @@ def update_process(result):
     there is no such process by the result name.
     """
     import dag
+    import dag.util as dag_utils
     import re
 
     proc_name = result.name
@@ -534,7 +539,7 @@ def update_process(result):
 
     try:
         root_dag = result_to_dag(proc_name)
-    except NoDagMarkerException as ndme:
+    except dag_utils.NoDagMarkerException as ndme:
         print("Missing dag %s\Skipping update.")
         return
 
@@ -610,6 +615,8 @@ def assimilate_workunit(result_list,canonical_result):
     
     Raises: dag.DagException if no canonical result is found
     """
+    import dag.util as dag_utils
+    
     if not canonical_result:
         raise dag.DagException("No canonical result provided.")
     try:
@@ -620,7 +627,7 @@ def assimilate_workunit(result_list,canonical_result):
         else:
             update_process(canonical_result)
     
-    except NoDagMarkerException as de:
+    except dag_utils.NoDagMarkerException as de:
         print("Missing Dag Marker. Skipping...")
     
 

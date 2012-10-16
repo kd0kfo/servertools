@@ -29,7 +29,7 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
   if(init_boinc_result(main_module) != 0)
     return -1;
       
-  mod = PyImport_Import(PyString_FromString("dag_utils"));
+  mod = PyImport_Import(PyString_FromString("boinctools"));
   if(mod != NULL)
     {
       PyObject *dict, *funct;
@@ -97,7 +97,7 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
     }
   else
     {
-      printf("Could not load dag_utils module.\n");
+      printf("Could not load boinctools module.\n");
       return 42;
     }
   
