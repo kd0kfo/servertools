@@ -81,8 +81,10 @@ def create_workunit_template(proc):
     Arguments: proc -- dag.Process to be used to create template
     Results: dag.File object for the template
     """
+    import dag
     import tempfile
     import os,os.path
+    
     tmpl_path = os.path.join(project_path,"templates")
     with tempfile.NamedTemporaryFile(mode='w',delete=False,dir=tmpl_path) as file:
         file.write("""
@@ -125,6 +127,8 @@ def create_result_template(proc,filename=None):
     
     Results: dag.File object for the template
     """
+
+    import dag
     import tempfile
     import os,os.path
     if filename == None:

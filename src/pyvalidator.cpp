@@ -78,7 +78,7 @@ int init_result(RESULT& result, void*& data)
 
 	      if(result != NULL)
 		{
-		  printf("Result: %s\n",PyString_AsString(result));
+		  printf("Result: %s\n",PyString_AsString(PyString_FromFormat("%s",result)));
 		  Py_XDECREF(result);
 		}
 	    }

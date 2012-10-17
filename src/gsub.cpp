@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   Py_Initialize();
   PySys_SetArgvEx(argc, argv, 0);
 
-  module = PyImport_Import(PyString_FromString("gsub"));
+  module = PyImport_Import(PyString_FromString("dag.gsub"));
   if(module == NULL)
     {
       fprintf(stderr,"Could not import gsub\n");
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   if(retval == Py_None)
     return 1;
   
-  printf("%s\n",PyString_AsString(retval));
+  printf("%s\n",PyString_AsString(PyString_FromFormat("%s",retval)));
 
   Py_Finalize();
 
