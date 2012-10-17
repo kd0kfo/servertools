@@ -4,7 +4,7 @@ boinctools
 
 """
 
-project_path = '/boinc/projects/stjudeathome'
+project_path = '/home/dcoss/projects/grid_tools/server_tools/test'#'/boinc/projects/stjudeathome'
 
 class BoincException(Exception):
     """
@@ -143,7 +143,7 @@ def scheduler_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
 def update_process(result):
 
     if result.validate_state not in [1,2]: # 1 = valid, 2 = invalid
-        print("Result %s not yet validated. Skipping" % name)
+        print("Result %s not yet validated. Skipping" % result.name)
         return
 
     raise BoincException("Add hook to user update_process code")
@@ -163,13 +163,14 @@ def assimilate_workunit(result_list,canonical_result):
     
     if not canonical_result:
         raise BoincException("No canonical result provided.")
-    try:
-        if canonical_result.id == 0:
-            print("Non canonical result found")
-            if result_list:
-                update_process(result_list[0])
-        else:
-            update_process(canonical_result)
+
+    if canonical_result.id == 0:
+        print("Non canonical result found")
+        if result_list:
+            update_process(result_list[0])
+    else:
+        update_process(canonical_result)
+
 
 def save_bad_res_output(filename,wuname):
     """

@@ -120,5 +120,5 @@ fi
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-		 src/mmpbsa-submit-src/Makefile])
+		 test/Makefile])
 AC_OUTPUT

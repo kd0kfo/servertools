@@ -76,7 +76,7 @@ int init_result(RESULT& result, void*& data)
 		    }
 		}
 
-	      if(result != NULL)
+	      if(result != NULL && result != Py_None)
 		{
 		  printf("Result: %s\n",PyString_AsString(PyString_FromFormat("%s",result)));
 		  Py_XDECREF(result);
@@ -98,7 +98,7 @@ PyObject *pyoperate_on_results(int num_results, const RESULT *r1, void* _data1, 
   PyObject *main_module = NULL, *main_dict = NULL, *validator_funct = NULL, *funct = NULL, *valid_value = NULL;
   PyObject *pyresult1, *pyresult2;
   BoincResult *obj1, *obj2;
-  const char init_filename[] = "/boinc/projects/stjudeathome/boincdag_init.py";
+  const char init_filename[] = "/home/dcoss/projects/grid_tools/server_tools/test/test_init.py";//"/boinc/projects/stjudeathome/boincdag_init.py";
   FILE *init_file = NULL;
   
   if(function_dict_name == NULL)
@@ -154,6 +154,7 @@ PyObject *pyoperate_on_results(int num_results, const RESULT *r1, void* _data1, 
     pyresult2 = import_result(main_module,"result2",(const std::vector<std::string>*)_data2,*r2);
     
   PyRun_SimpleString("validators = {}");
+  PyRun_SimpleString("cleaners = {}");
   retval = PyRun_SimpleFile(init_file,init_filename);
   fclose(init_file);init_file = NULL;
   if(retval)
@@ -232,6 +233,7 @@ int cleanup_result(RESULT const& r, void* data)
 {
   PyObject *retval = Py_None, *mod = Py_None;
   bool child_starter_failed = false;
+
   Py_Initialize();
 
   retval = pyoperate_on_results(1,&r,data,&r,NULL,"cleaners");

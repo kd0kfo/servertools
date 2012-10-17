@@ -14,7 +14,7 @@ void *data1 = NULL, *data2 = NULL;
 
 int test_module_found()
 {
-  const char *needed_modules[] = {"dag.gsub","dag.update_dag","dag","boinctools",NULL};
+  const char *needed_modules[] = {"boinctools",NULL};
   size_t index = 0;
 
   printf("Checking for necessary modules\n");
@@ -32,7 +32,7 @@ int test_module_found()
     }
 
 
-  PyRun_SimpleString("import os.path as OP;import boinctools;from dag import * ;a = DAG();b=Process('trident',[],[File('test-workunit_0_0','hid_UTR.fasta.out')]);b.workunit_name ='test-workunit';a.add_process(b);a.save(open('jobs.dag','w'));boinctools.make_dag_marker('test-workunit',OP.abspath('jobs.dag'));");
+  PyRun_SimpleString("import boinctools");
 
   if(PyErr_Occurred())
     PyErr_Print();
@@ -81,7 +81,7 @@ int test_validator_compare_result()
   if(retval)
     return retval;
   
-  printf("Comparing different results\n");
+  printf("Comparing different results...\n");
   different = result1;
   different.appid = 123;
   retval = compare_results(result1,data1,different,data2,match);
