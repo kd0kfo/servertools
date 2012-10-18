@@ -5,6 +5,5 @@ unittest_CPPFLAGS = -I ../src $(BOINC_CPPFLAGS) $(MYSQL_CFLAGS) $(PYTHON_CFLAGS)
 unittest_LDFLAGS = $(BOINC_LDFLAGS) 
 unittest_LDADD = $(BOINC_LIBS) $(MYSQL_LIBS) $(PYTHON_LDFLAGS)
 
-
 test: unittest
 	./unittest

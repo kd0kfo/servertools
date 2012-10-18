@@ -43,7 +43,6 @@ int init_result(RESULT& result, void*& data)
 
   paths = new std::vector<std::string>;
   get_output_file_paths(result,*paths);
-  printf("Number of paths: %lu\n",paths->size());
   data = (void*)paths;
 
   boincresult = import_result(main_module, "a", paths, result);

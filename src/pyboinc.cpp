@@ -159,10 +159,10 @@ PyObject* import_result(PyObject *module, const char *variable_name, const std::
       RESULT non_const_res = result;
       for(std::vector<std::string>::const_iterator path = paths->begin();path != paths->end();path++)
 	{
-	  //PyList_Append(the_struct->output_files,PyString_FromString(path->c_str()));
 	  physical_name = *path;
 	  if(get_logical_name(non_const_res,physical_name,logical_name) != 0)
-	    printf("[WARNING]\tCould not get logical name for %s",physical_name.c_str());
+	    printf("WARNING -- Could not get logical name for %s\n",physical_name.c_str());
+	  printf("GOT PATHS: %s, %s\n",path->c_str(),logical_name.c_str());
 	  PyList_Append(the_struct->output_files,Py_BuildValue("(ss)",path->c_str(),logical_name.c_str()));
 	}
     }
