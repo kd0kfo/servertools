@@ -4,7 +4,7 @@ boinctools
 
 """
 
-project_path = '/home/dcoss/projects/grid_tools/server_tools/test'#'/boinc/projects/stjudeathome'
+project_path = '/boinc/projects/stjudeathome'
 
 class BoincException(Exception):
     """
@@ -126,11 +126,15 @@ def cancel_workunits(workunit_names):
 
     os.chdir(orig_pwd)
 
-def scheduler_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
+def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
+    import os
+    import os.path as OP
+    import subprocess as SP
+    
     orig_pwd = os.getcwd()
     os.chdir(project_path)
-    cmd_args = "--appname %s --wu_name %s --wu_template templates/%s --result_template templates/%s" % (proc.cmd, proc.workunit_name, wu_tmpl, res_tmpl)
-    for input_file in input_files:
+    cmd_args = "--appname %s --wu_name %s --wu_template templates/%s --result_template templates/%s" % (cmd, workunit_name, wu_tmpl, res_tmpl)
+    for input_file in input_filenames:
         cmd_args += " %s" % input_file
     cmd_list = [OP.join( OP.join(project_path,"bin") ,"create_work")]
     cmd_list.extend(cmd_args.split())

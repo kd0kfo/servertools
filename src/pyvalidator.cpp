@@ -97,7 +97,7 @@ PyObject *pyoperate_on_results(int num_results, const RESULT *r1, void* _data1, 
   PyObject *main_module = NULL, *main_dict = NULL, *validator_funct = NULL, *funct = NULL, *valid_value = NULL;
   PyObject *pyresult1, *pyresult2;
   BoincResult *obj1, *obj2;
-  const char init_filename[] = "/home/dcoss/projects/grid_tools/server_tools/test/test_init.py";//"/boinc/projects/stjudeathome/boincdag_init.py";
+  const char init_filename[] = "/boinc/projects/stjudeathome/boincdag_init.py";
   FILE *init_file = NULL;
   
   if(function_dict_name == NULL)
