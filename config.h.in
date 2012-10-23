@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Debug Mode: Will run verbose and optimization. */
+#undef DEBUG
+
 /* Name of package */
 #undef PACKAGE
 

@@ -117,6 +117,19 @@ if test x$with_boinc != x; then
    	fi   
 fi
 
+#debug
+AC_MSG_CHECKING([use debug mode])
+AC_ARG_ENABLE([debug],
+        [AS_HELP_STRING([--enable-debug],[Enable debug data logging. Default: no])],
+        [enable_debug="$enableval"],
+        [enable_debug=no])
+AC_MSG_RESULT([$enable_debug])
+if test x"$enable_debug" = x"yes"; then
+   AC_DEFINE([DEBUG],[],[Debug Mode: Will run verbose and optimization.])
+   CFLAGS="$CFLAGS -g -O0 "
+fi
+
+
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

@@ -144,38 +144,6 @@ def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
         raise BoincException("Could not create work.\nRan: %s\n\nError Message: %s\n" % (" ".join(cmd_list), errmsg.decode('utf-8')))
     os.chdir(orig_pwd)
 
-def update_process(result):
-
-    if result.validate_state not in [1,2]: # 1 = valid, 2 = invalid
-        print("Result %s not yet validated. Skipping" % result.name)
-        return
-
-    raise BoincException("Add hook to user update_process code")
-
-
-def assimilate_workunit(result_list,canonical_result):
-    """
-    Takes a list of BoincResult objects and calls user code to act on the workunit
-    
-    Arguments: result_list -- List of BoincResult objects for a workunit
-    canonical_result -- BoincResult object representing the canonical result
-    
-    No return value.
-    
-    @throw: BoincException if no canonical result is found
-    """
-    
-    if not canonical_result:
-        raise BoincException("No canonical result provided.")
-
-    if canonical_result.id == 0:
-        print("Non canonical result found")
-        if result_list:
-            update_process(result_list[0])
-    else:
-        update_process(canonical_result)
-
-
 def save_bad_res_output(filename,wuname):
     """
     Copies a result output file and saves it to the invalid_results

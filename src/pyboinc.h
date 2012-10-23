@@ -20,5 +20,11 @@ int init_boinc_result(PyObject *module);
 struct RESULT;
 PyObject* import_result(PyObject *module, const char *variable_name, const std::vector<std::string> *paths, const RESULT& result);
 
+PyObject* py_user_code_on_results(int num_results, const RESULT *r1, void* _data1, RESULT const *r2, void* _data2, const char *function_dict_name);
+
+PyObject* py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonical_result, const char *function_dict_name);
+
+PyObject*  py_boinctools_on_result(const RESULT& r, const char *function_name);
+PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RESULT *canonical_result , const char *function_name);
 
 #endif
