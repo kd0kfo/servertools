@@ -111,7 +111,7 @@ def cancel_workunits(workunit_names):
     import os
     import subprocess as SP
 
-    if not procs:
+    if not workunit_names:
         return
 
     cmd_list = ["bin/cancel_jobs","--by_name"] + workunit_names
