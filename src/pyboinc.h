@@ -1,3 +1,10 @@
+//
+// ServerTools
+// Copyright (C) 2012 David Coss, PhD
+//
+// You should have received a copy of the GNU General Public License
+// in the file COPYING.  If not, see <http://www.gnu.org/licenses/>.
+//
 #ifndef PYBOINC_H
 #define PYBOINC_H
 

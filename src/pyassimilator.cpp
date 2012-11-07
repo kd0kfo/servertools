@@ -1,3 +1,17 @@
+//
+// ServerTools
+// Copyright (C) 2012 David Coss, PhD
+//
+// You should have received a copy of the GNU General Public License
+// in the file COPYING.  If not, see <http://www.gnu.org/licenses/>.
+//
+// This source code embeds Python functions into the BOINC assimilator.
+// 
+// Usage: For each Application ID (appid), add an entry to the "assimilators" dict
+// in the project init file that maps the appid, as a String, to the function
+// to be called, with the Result as an argument.
+//
+
 #include <Python.h>
 #include <vector>
 

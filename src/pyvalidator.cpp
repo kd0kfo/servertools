@@ -1,3 +1,23 @@
+//
+// ServerTools
+// Copyright (C) 2012 David Coss, PhD
+//
+// You should have received a copy of the GNU General Public License
+// in the file COPYING.  If not, see <http://www.gnu.org/licenses/>.
+
+//
+// This program embeds python into the BOINC validator. The three
+// validation routines, init_results, compare_results and clean_result
+// all package the result objects into Python objects and call 
+// corresponding Python functions.
+//
+// Usage: In a Python source code file, define a dict entry in 
+// validators that maps the application id (as a string) to the 
+// name of the Python function that should be called. See the
+// example/ subdirectory for examples of these files.
+//
+
+
 #include <Python.h>
 #include <structmember.h>
 #include <vector>
@@ -10,6 +30,14 @@
 
 #include "pyboinc.h"
 
+/**
+ * Takes a RESULT objects and initializes the data set for it.
+ *
+ * This function then calls the Python functions boinctools.update_process,
+ * with the result as an argument. This allows users to perform any
+ * initialization functions they may wish to use.
+ * 
+ */
 int init_result(RESULT& result, void*& data) 
 {
   OUTPUT_FILE_INFO fi;
@@ -92,7 +120,9 @@ int init_result(RESULT& result, void*& data)
   return retval;
 }
 
-
+/**
+ * Using the application id (appid) and the validators dict from the users Python code, this routine decides which user Python code to run to validate two results.
+ */
 int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, bool& match) 
 {
   PyObject *retval;
@@ -113,6 +143,12 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
   return 0;
 }
 
+/**
+ * This function does two things. First, it calls the Python function
+ * boinctools.continue_children. This function may be used to start processes
+ * after the work unit has finished. Second, it frees the memory corresponding
+ * to the address stored in "data". 
+ */
 int cleanup_result(RESULT const& r, void* data) 
 {
   PyObject *retval = Py_None;

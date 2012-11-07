@@ -1,3 +1,27 @@
+//
+// ServerTools
+// Copyright (C) 2012 David Coss, PhD
+//
+// You should have received a copy of the GNU General Public License
+// in the file COPYING.  If not, see <http://www.gnu.org/licenses/>.
+
+//
+// This source code provides utility functions for embedding Python in
+// BOINC validation and assimilation code. Here, the BoincResult class
+// is defined. This is used to pass some of the data in the  RESULT 
+// struct from the BOINC API to the embedded Python code.
+//
+// Usage: 
+// Replace "init_filename" with the path of the initialization Python
+// code. This code should create a dict to map Application IDs (appid),
+// as strings, to the name of Python functions to call.
+//
+// List of dict's needed are: validators, cleaners and assimilators
+// Note: It is acceptable for these dict's to be empty. If the Python
+// function does not find an entry for the appid being used, it will skip
+// that function.
+//
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
