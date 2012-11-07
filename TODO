@@ -1,3 +1,2 @@
-* Currently, if gsub.py exits before the dag is saved, template files exist but are not accounted for. This definitely needs to be fixed.
-* Need to add check for input/output file name uniqueness.
+* gsub and gmod have not been used in a long time. These need to be tested.
 
