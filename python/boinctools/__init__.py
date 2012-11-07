@@ -1,6 +1,6 @@
 """
 boinctools
-===========
+==========
 
 """
 
@@ -51,7 +51,7 @@ def dir_hier_path(original_filename):
     
     Returns: UTF-8 representation of the full path to file under the download hierarchy tree
 
-    @throw: BoincException if dir_hier_path fails.
+    @raise BoincException: if dir_hier_path fails.
     """
     import subprocess as SP
     import os
@@ -71,8 +71,8 @@ def stage_files(input_files,source_dir = None, set_grp_perms = True, overwrite =
     """
     Stages files to the downloads directory of the BOINC server, using dir_hier_path
     
-    @type input_file: dict
-    @param input_file: Dictionary that maps physical filename (full path) to the name of the file within the downloads directory (i.e. name used by server).
+    @type input_files: dict
+    @param input_files: Dictionary that maps physical filename (full path) to the name of the file within the downloads directory (i.e. name used by server).
     """
     import os.path as OP
     import os
@@ -105,7 +105,7 @@ def cancel_workunits(workunit_names):
     @type workunit_names: List
     @param workunit_names: Workunit names to be canceled
     @return: no return value
-    @throw: Exception if create_work fails
+    @raise BoincException: if create_work fails
     """
     import os.path as OP
     import os
@@ -150,13 +150,12 @@ def save_bad_res_output(filename,wuname):
     subdirectory of the project. The file is put in a subdirectory
     named after the workunit.
 
-    Arguments:
-    \tfilename -- String name of file to be copied
-    \twuname -- String name of workunit
+    @param filename: Name of file to be copied
+    @type filename: String
+    @param wuname: Name of workunit
+    @type wuname: String
 
-    Returns nothing.
-
-    Raises a BoincException if the invalid_results directory does not
+    @raise BoincException: if the invalid_results directory does not
     exist in the project path.
     """
     
