@@ -2,13 +2,18 @@
 boinctools
 ==========
 
+@author: David Coss, PhD
+@date: November 7, 2012
+@license: GPL version 3 (see COPYING or http://www.gnu.org/licenses/gpl.html for details)
+
+This python module provides interface between BOINC C API and Python user code.
 """
 
 project_path = '/boinc/projects/stjudeathome'
 
 class BoincException(Exception):
     """
-    General Exception Class used in boinctools routine.
+    General Exception Class used in boinctools routines.
     """
     pass
 
@@ -16,8 +21,7 @@ def dump_traceback(e):
     """
     Writes traceback information to standard output.
 
-    Arguments: Exception
-    No return value.
+    @type e: Exception
     """
     
     import sys
@@ -47,9 +51,10 @@ def dir_hier_path(original_filename):
     """
     Wrapper for BOINC dir_hier_path.
 
-    Arguments: original_filename String representation of the filename
+    @param original_filename: representation of the filename
+    @type original_filename: String
     
-    Returns: UTF-8 representation of the full path to file under the download hierarchy tree
+    @return: UTF-8 representation of the full path to file under the download hierarchy tree
 
     @raise BoincException: if dir_hier_path fails.
     """
@@ -73,6 +78,12 @@ def stage_files(input_files,source_dir = None, set_grp_perms = True, overwrite =
     
     @type input_files: dict
     @param input_files: Dictionary that maps physical filename (full path) to the name of the file within the downloads directory (i.e. name used by server).
+    @param source_dir: Option parameter to set the source directory of input files
+    @type source_dir: String
+    @param set_grp_perms: Whether or not Group Permissions Should be set to READ/Write explictly (Default: True)
+    @type set_grp_perms: Boolean
+    @param overwrite: Whether or not files should be overwritten (Default: True)
+    @type overwrite: Boolean
     """
     import os.path as OP
     import os
@@ -127,6 +138,20 @@ def cancel_workunits(workunit_names):
     os.chdir(orig_pwd)
 
 def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
+    """
+    Creates a Workunit by calling create_work with the provided parameters.
+
+    @param cmd: Application Name (corresponds to appname in applications database table)
+    @type cmd: String
+    @param workunit_name: Name to be used for workunit
+    @type workunit_name: String
+    @param wu_tmpl: File name of workunit template within templates/ subdirectory
+    @type wu_tmpl: String
+    @param res_tmpl: File name of result template within templates/ subdirectory
+    @type res_tmpl: String
+    @param input_filenames: List of input file names to be used by the work unit
+    @type input_filenames: List of Strings
+    """
     import os
     import os.path as OP
     import subprocess as SP
