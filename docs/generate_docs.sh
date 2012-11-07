@@ -1,4 +1,4 @@
 #!/bin/sh
 
-epydoc -o api --name "BOINC Server Tools" $@ ../python/boinctools
-
+epydoc -o python_api --name "BOINC Server Tools" $@ ../python/boinctools
+doxygen

@@ -20,7 +20,7 @@ This code embeds Python in the BOINC validation and assimilation programs, which
 Documentation
 -------------
 
-A script, docs/generate_docs.sh, may be used to generate Python API documentation. This requires Epydoc. This may be downloaded at http://epydoc.sourceforge.net.
+A script, docs/generate_docs.sh, may be used to generate API documentation. Python API documentation requires Epydoc. This may be downloaded at http://epydoc.sourceforge.net. C API documentation is generated with doxygen. This may be downloaded at www.doxygen.org.
 
 License
 -------
