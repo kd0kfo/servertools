@@ -22,6 +22,7 @@ def update_dag_job_state(result,is_valid):
 
 def validate(result1, result2):
 	import dag.util as dagu
+	import dag
 	import re
 	from os import path as OP
 	import os
@@ -35,20 +36,25 @@ def validate(result1, result2):
 	# Short DNA segments may be very quick (especially in linux)
 	# These short runs may produce no hits, which will mean there
 	# is no output file (zero bytes).
-	if result1.cpu_time < 60 and result2.cpu_time < 60:
-		if not OP.isfile(output_file1) and not OP.isfile(output_file2):
-			valid = True
-			update_dag_job_state(result1,valid)
-			return valid
+	## if result1.cpu_time < 60 and result2.cpu_time < 60:
+## 		if not OP.isfile(output_file1) and not OP.isfile(output_file2):
+## 			valid = True
+## 			update_dag_job_state(result1,valid)
+## 			return valid
 	
-	if not OP.isfile(output_file1) and result1.cpu_time > 60:
-		valid = False
+## 	if not OP.isfile(output_file1) and result1.cpu_time > 60:
+## 		valid = False
+## 		update_dag_job_state(result1,valid)
+## 		return valid
+## 	if not OP.isfile(output_file2) and result2.cpu_time > 60:
+## 		valid = False
+## 		update_dag_job_state(result1,valid)
+## 		return valid
+	if not OP.isfile(output_file1) and not OP.isfile(output_file2):
+		valid = True
 		update_dag_job_state(result1,valid)
-		return valid
-	if not OP.isfile(output_file2) and result2.cpu_time > 60:
-		valid = False
-		update_dag_job_state(result1,valid)
-		return valid
+ 		return valid
+	
 
 	valid = (OP.getsize(result1.output_files[0][0]) == OP.getsize(result2.output_files[0][0]))
 
@@ -57,7 +63,12 @@ def validate(result1, result2):
 		for i in [result1.output_files[0][0], result2.output_files[0][0]]:
 			print("Size of %s: %d" % (i,OP.getsize(i)))
 
-	update_dag_job_state(result1,valid)
+	try:
+		update_dag_job_state(result1,valid)
+	except dag.MissingDAGFile as mdf:
+		print("Missing dag file for result '%s'. Skipping process update." % result1.name)
+		return False
+
 	return valid
 
 def clean(result):
@@ -81,6 +92,11 @@ def clean(result):
 		the_dag = dag.boinc.result_to_dag(result.name)
 	except dag_utils.NoDagMarkerException as ndme:
 		print("Missing dag %s\nSkipping clean up")
+		return False
+	except dag.MissingDAGFile as mdf:
+		print("Missing dag file for result '%s'. Attempting to move output to invalid_results directory" % result.name)
+		for output_file in result.output_files:
+			boinctools.save_bad_res_output(output_file[0],wuname)
 		return False
 		
 	if not the_dag:
