@@ -45,6 +45,7 @@ int init_result(RESULT& result, void*& data)
   std::vector<std::string> *paths;
   int retval = 0;
   
+  paths = new std::vector<std::string>;
   Py_Initialize();
 
   main_module = PyImport_AddModule("__main__");
@@ -58,7 +59,7 @@ int init_result(RESULT& result, void*& data)
     }
 
   init_boinc_result(main_module);
-    
+
   main_dict = PyModule_GetDict(main_module);
   if(main_dict == NULL)
     {
@@ -69,11 +70,10 @@ int init_result(RESULT& result, void*& data)
       return ERR_OPENDIR;
     }
 
-  paths = new std::vector<std::string>;
   get_output_file_paths(result,*paths);
   data = (void*)paths;
 
-  boincresult = import_result(main_module, "a", paths, result);
+  boincresult = import_result(main_module, "a", paths, result);// borrowed reference. Do not decref.
 
   PyRun_SimpleString("print('%s running app number %d' %(a.name, a.appid))");
 
@@ -94,7 +94,9 @@ int init_result(RESULT& result, void*& data)
 	      pyresult = PyObject_CallFunction(funct,"(O)",boincresult);
 	      if((exception = PyErr_Occurred()) != NULL)
 		{
-		  const char *exc_name = PyString_AsString(PyObject_GetAttrString(exception,"__name__"));
+		  PyObject *excpt = PyObject_GetAttrString(exception,"__name__");
+		  const char *exc_name = PyString_AsString(excpt);
+		  Py_XDECREF(excpt);
 		  if(exc_name == NULL || strcmp(exc_name,"NoSuchProcess") != 0)
 		    {
 		      printf("Python Exception (%s) happened\n",(exc_name)?exc_name : "NULL");
@@ -107,9 +109,12 @@ int init_result(RESULT& result, void*& data)
 		{
 		  PyObject *str_rep = PyObject_Str(pyresult);
 		  if(str_rep != NULL)
-		    printf("Result: %s\n",PyString_AsString(str_rep));
-		  Py_XDECREF(pyresult);
+		    {
+		      printf("Result: %s\n",PyString_AsString(str_rep));
+		      Py_DECREF(str_rep);
+		    }
 		}
+	      Py_XDECREF(pyresult);
 	    }
 	}
       Py_XDECREF(boinctools_mod);
@@ -138,6 +143,7 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
   
   match = (PyObject_IsTrue(retval));
 
+  Py_XDECREF(retval);
   Py_Finalize();
 
   return 0;
@@ -163,13 +169,11 @@ int cleanup_result(RESULT const& r, void* data)
       fprintf(stderr,"There was a python error when cleaning %s.\nExiting.\n",r.name);
       exit(1);
     }
-
-  result = py_boinctools_on_result(r,"continue_children");
-  if(result != NULL)
-    {
-      Py_XDECREF(result);
-    }
+  Py_DECREF(retval);
   
+  result = py_boinctools_on_result(r,"continue_children");
+  Py_XDECREF(result);
+    
   if(PyErr_Occurred())
     {
       printf("%s.%s failed\n","boinctools","continue_children");

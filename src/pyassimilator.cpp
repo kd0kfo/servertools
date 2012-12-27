@@ -12,13 +12,14 @@
 // to be called, with the Result as an argument.
 //
 
-#include <Python.h>
-#include <vector>
+#include "validate_util.h"
+#include "pyboinc.h"
 
 #include "boinc/boinc_db_types.h"
 
-#include "validate_util.h"
-#include "pyboinc.h"
+#include <Python.h>
+#include <vector>
+
 
 int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canonical_result)
 {
@@ -29,18 +30,18 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
   retval = py_user_code_on_workunit(results, &canonical_result, "assimilators");
   if(retval == NULL)
     {
-      fprintf(stderr,"[%s:%s] There was a python error when assimilating %s.\nExiting.\n",__FILE__,__LINE__,canonical_result.name);
+      fprintf(stderr,"[%s:%d] There was a python error when assimilating %s.\nExiting.\n",__FILE__,__LINE__,canonical_result.name);
       exit(1);
     }
+  Py_DECREF(retval);
 
   if(PyErr_Occurred())
     {
-      printf("Assimilation failed\n","boinctools","continue_children");
+      printf("Assimilation failed\n");
       PyErr_Print();
       Py_Finalize();
       return 1;
     }
-  
   
   Py_Finalize();
 
