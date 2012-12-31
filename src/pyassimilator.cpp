@@ -20,13 +20,12 @@
 #include <Python.h>
 #include <vector>
 
-
 int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canonical_result)
 {
   PyObject *retval;
 
   initialize_python();
-  
+#if 0// OLD
   retval = py_user_code_on_workunit(results, &canonical_result, "assimilators");
   if(retval == NULL)
     {
@@ -43,7 +42,56 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
       finalize_python();
       return 1;
     }
+#else // New
+    std::string command;
   
+  if(PyRun_SimpleString("import boinctools;results = []"))
+    {
+      fprintf(stderr,"Could not import boinctools python module.\n");
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  
+  // Create Result Class
+  command = "canonical = " + result_init_string(canonical_result);
+  if(PyRun_SimpleString(command.c_str()))
+    {
+      fprintf(stderr,"Could not create result object.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+
+  for(std::vector<RESULT>::const_iterator result = results.begin();result != results.end();result++)
+    {
+      command = "results.append(" + result_init_string(*result) + ")";
+      if(PyRun_SimpleString(command.c_str()))
+	{
+	  fprintf(stderr,"Could not add result object to assimilation result list.\n");
+	  fprintf(stderr,"Python command: %s",command.c_str());
+	  if(PyErr_Occurred())
+	    PyErr_Print();
+	  finalize_python();
+	  exit(1);
+	}
+    }
+  
+  
+  if(PyRun_SimpleString("boinctools.assimilator(results,canonical)"))
+    {
+      fprintf(stderr,"Could not assimilate result objects.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  
+#endif
   return 0;
 
 

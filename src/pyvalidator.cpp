@@ -42,104 +42,19 @@
 int init_result(RESULT& result, void*& data) 
 {
   OUTPUT_FILE_INFO fi;
-  PyObject *main_module = NULL, *main_dict = NULL, *module_name = NULL, *boincresult, *boinctools_mod = NULL;
   std::vector<std::string> *paths;
+
   int retval = 0;
   
   paths = new std::vector<std::string>;
 
-  initialize_python();
-
-  main_module = PyImport_AddModule("__main__");
-  if(main_module == NULL)
-    {
-      fprintf(stderr,"Could not add module __main__\n");
-      if(errno)
-	fprintf(stderr,"Reason: %s\n",strerror(errno));
-      return ERR_OPENDIR;
-    }
-
-  init_boinc_result(main_module);
-
-  main_dict = PyModule_GetDict(main_module);
-  if(main_dict == NULL)
-    {
-      fprintf(stderr,"Could not get globals.\n");
-      if(errno)
-	fprintf(stderr,"Reason: %s\n",strerror(errno));
-      return ERR_OPENDIR;
-    }
-
   get_output_file_paths(result,*paths);
+
   data = (void*)paths;
-
-  boincresult = import_result(main_module, "a", paths, result);// borrowed reference. Do not decref.
-
-  PyRun_SimpleString("print('%s running app number %d' %(a.name, a.appid))");
-
-  printf("Marking Process as closed.\n");
-  
-#if PY_MAJOR_VERSION >= 3
-  module_name = PyBytes_FromString("boinctools");
-#else
-  module_name = PyString_FromString("boinctools");
-#endif
-  boinctools_mod = PyImport_Import(module_name);
-  Py_XDECREF(module_name);
-  if(boinctools_mod != NULL)
-    {
-      PyObject *dict, *funct, *exception = NULL;
-      dict = PyModule_GetDict(boinctools_mod);
-      funct = PyDict_GetItemString(dict,"update_process");
-      if(funct != NULL)
-	{
-	  if(PyCallable_Check(funct))
-	    {
-	      PyObject *pyresult = NULL;
-	      printf("Calling update_process\n");
-	      pyresult = PyObject_CallFunction(funct,"(O)",boincresult);
-	      if((exception = PyErr_Occurred()) != NULL)
-		{
-		  PyObject *excpt = PyObject_GetAttrString(exception,"__name__");
-		  const char *exc_name;
-#if PY_MAJOR_VERSION >= 3		
-		  exc_name = PyBytes_AsString(excpt);
-#else
-		  exc_name = PyString_AsString(excpt);
-#endif
-		  Py_XDECREF(excpt);
-		  if(exc_name == NULL || strcmp(exc_name,"NoSuchProcess") != 0)
-		    {
-		      printf("Python Exception (%s) happened\n",(exc_name)?exc_name : "NULL");
-		      PyErr_Print();
-		      finalize_python();
-		      exit(1);
-		    }
-		}
-
-	      if(pyresult != NULL && pyresult != Py_None)
-		{
-		  PyObject *str_rep = PyObject_Str(pyresult);
-		  if(str_rep != NULL)
-		    {
-		      char *str_rep_as_str;
-#if PY_MAJOR_VERSION >= 3
-		      str_rep_as_str = PyBytes_AsString(str_rep);
-#else
-		      str_rep_as_str = PyString_AsString(str_rep);
-#endif
-		      printf("Result: %s\n",str_rep_as_str);
-		      Py_DECREF(str_rep);
-		    }
-		}
-	      Py_XDECREF(pyresult);
-	    }
-	}
-      Py_XDECREF(boinctools_mod);
-    }
 
   return retval;
 }
+
 
 /**
  * Using the application id (appid) and the validators dict from the users Python code, this routine decides which user Python code to run to validate two results.
@@ -149,11 +64,16 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
   PyObject *retval;
 
   initialize_python();
-  
+#if 0 // OLD
   retval = py_user_code_on_results(2,&r1,_data1,&r2,_data2,"validators");
   if(retval == Py_None || retval == NULL)
     {
       fprintf(stderr,"There was a python error when validating %s.\nExiting.\n",r1.name);
+      if(retval == NULL)
+	fprintf(stderr,"validator function returned NULL.\n");
+      else if(retval == Py_None)
+	fprintf(stderr,"validator function returned None.\n");
+      PyErr_Print();
       finalize_python();
       exit(1);
     }
@@ -161,6 +81,76 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
   match = (PyObject_IsTrue(retval));
 
   Py_XDECREF(retval);
+#else// NEW
+  std::string command;
+  
+  // Import Module
+  if(PyRun_SimpleString("import boinctools"))
+    {
+      fprintf(stderr,"Could not import boinctools python module.\n");
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  
+  // Create Result Class
+  command = "res1 = " + result_init_string(r1);
+  if(PyRun_SimpleString(command.c_str()))
+    {
+      fprintf(stderr,"Could not create result object.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  load_paths("res1",r1,_data1);
+
+  command = "res2 = " + result_init_string(r2);
+  if(PyRun_SimpleString(command.c_str()))
+    {
+      fprintf(stderr,"Could not create result object.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  load_paths("res2",r2,_data2);
+
+  command = "is_valid = boinctools.validate(res1,res2)";
+  if(PyRun_SimpleString(command.c_str()))
+    {
+      fprintf(stderr,"Could not validate result objects.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+
+  PyObject *m = PyImport_AddModule("__main__");
+  PyObject *result = PyObject_GetAttrString(m,"is_valid");
+  if(result != NULL)
+    {
+      PyObject *str = PyObject_Str(result);
+      if(str)
+	printf("Valid? %s\n",PyString_AsString(str));
+      match = PyObject_IsTrue(result);
+      Py_XDECREF(str);
+    }
+  else
+    {
+      fprintf(stderr,"Could not check validity of results.\n");
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  Py_XDECREF(result);
+
+#endif
 
   return 0;
 }
@@ -177,6 +167,7 @@ int cleanup_result(RESULT const& r, void* data)
   PyObject *result = NULL;
 
   initialize_python();
+#if 0// OLD
 
   retval = py_user_code_on_results(1,&r,data,NULL,NULL,"cleaners");
 
@@ -204,6 +195,43 @@ int cleanup_result(RESULT const& r, void* data)
       return 1;
     }
   
+#else// New
+  std::string command;
+  
+  if(PyRun_SimpleString("import boinctools"))
+    {
+      fprintf(stderr,"Could not import boinctools python module.\n");
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  
+  // Create Result Class
+  command = "res1 = " + result_init_string(r);
+  if(PyRun_SimpleString(command.c_str()))
+    {
+      fprintf(stderr,"Could not create result object.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+  load_paths("res1",r,data);
+  
+  if(PyRun_SimpleString("boinctools.clean(res1)"))
+    {
+      fprintf(stderr,"Could not clean result objects.\n");
+      fprintf(stderr,"Python command: %s",command.c_str());
+      if(PyErr_Occurred())
+	PyErr_Print();
+      finalize_python();
+      exit(1);
+    }
+
+#endif
+
   if(data != NULL)
     {
       delete (std::vector<std::string>*)data;

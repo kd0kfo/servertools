@@ -23,6 +23,7 @@
 //
 
 #include <Python.h>
+#include <sstream>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -297,21 +298,25 @@ PyObject *py_user_code_on_results(int num_results, const RESULT *r1, void* _data
   
   if(function_dict_name == NULL)
     {
+      fprintf(stderr,"Missing function name\n"); 
       Py_INCREF(Py_None);
       return Py_None;
     }
   if(num_results < 1 || num_results > 2)
     {
+      fprintf(stderr,"Invalid number of results for py_user_code_on_results.\n");
       Py_INCREF(Py_None);
       return Py_None;
     }
   if(r1 == NULL || _data1 == NULL)
     {
+      fprintf(stderr,"Missing result or data value.\n");
       Py_INCREF(Py_None);
       return Py_None;
     }
   if(num_results == 2 && (r2 == NULL || _data2 == NULL))
     {
+      fprintf(stderr,"Missing second result or data value.\n");
       Py_INCREF(Py_None);
       return Py_None;
     }
@@ -770,22 +775,57 @@ PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RE
 }
 
 
-bool python_initialized = false;
 void initialize_python()
 {
-  if(python_initialized)
+  if(Py_IsInitialized())
     return;
   
   Py_Initialize();
-  python_initialized = true;
 }
 
 void finalize_python()
 {
-  if(!python_initialized)
+  if(!Py_IsInitialized())
     return;
   
   Py_Finalize();
-  python_initialized = false;
 }
+
+std::string result_init_string(const RESULT& res)
+{
+  std::ostringstream buffer;
+  buffer << " boinctools.BoincResult(\"" << res.name << "\", " << res.id << ", " << res.appid << ", " << res.exit_status << ", " << res.validate_state << ", " << res.cpu_time << ") ";
+  return buffer.str();
+}
+
+void load_paths(const std::string& variable_name, const RESULT& res, void *data)
+{
+  std::vector<std::string> *paths = (std::vector<std::string>*)data;
+
+  if(paths != NULL)
+    {
+      std::string logical_name,physical_name;
+      std::ostringstream buffer;
+      RESULT non_const_res = res;
+      for(std::vector<std::string>::const_iterator path = paths->begin();path != paths->end();path++)
+	{
+	  physical_name = *path;
+	  if(get_logical_name(non_const_res,physical_name,logical_name) != 0)
+	    printf("WARNING -- Could not get logical name for %s\n",physical_name.c_str());
+	  buffer.clear();buffer.str("");
+	  buffer << variable_name << ".output_files.append((\"" << path->c_str() << "\", \"" << logical_name.c_str() << "\"))";
+	  if(PyRun_SimpleString(buffer.str().c_str()))
+	    {
+	      fprintf(stderr,"Could not create result object.\n");
+	      fprintf(stderr,"Python Command: %s",buffer.str().c_str());
+	      if(PyErr_Occurred())
+		PyErr_Print();
+	      finalize_python();
+	      exit(1);	      
+	    }
+	}
+    }
+}
+
+
 

@@ -17,6 +17,21 @@ class BoincException(Exception):
     """
     pass
 
+class BoincResult():
+    def __init__(self,name,id,appid,exit_status,validate_state,cpu_time):
+        self.name = name
+        self.output_files = []
+        self.id = id
+        self.appid = appid
+        self.exit_status = exit_status
+        self.validate_state = validate_state
+        self.cpu_time = cpu_time
+
+    def add_output_file(self,path,logical_name):
+        file_tuple = (path,logical_name)
+        self.output_files.append(file_tuple)
+  
+
 def dump_traceback(e):
     """
     Writes traceback information to standard output.
@@ -202,3 +217,39 @@ def save_bad_res_output(filename,wuname):
         shutil.copy(filename,bad_wu_path)
     else:
         raise BoincException("'invalid_results' directory does not exist. Data lost.")
+
+def validate(result1, result2):
+    import os.path as OP
+    init_filename = OP.join(project_path,"boincdag_init.py")
+    variables = {}
+    execfile(init_filename, variables)
+
+    function_name = variables['validators'][str(result1.appid)]
+    function = variables[function_name]
+    is_valid = function(result1,result2)
+    return is_valid
+
+def clean(result):
+    import os.path as OP
+
+    print("Cleaning %s" % result.name)
+    init_filename = OP.join(project_path,"boincdag_init.py")
+    variables = {}
+    execfile(init_filename, variables)
+
+    function_name = variables['cleaners'][str(result.appid)]
+    function = variables[function_name]
+    function(result)
+
+def assimilator(result_list,canonical_result):
+    import os.path as OP
+
+    print("Assimilating %d results")
+    init_filename = OP.join(project_path,"boincdag_init.py")
+    variables = {}
+    execfile(init_filename, variables)
+
+    function_name = variables['assimilators'][str(canonical_result.appid)]
+    function = variables[function_name]
+    function(result_list,canonical_result)
+

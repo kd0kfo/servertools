@@ -71,4 +71,16 @@ PyObject* py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonic
 PyObject*  py_boinctools_on_result(const RESULT& r, const char *function_name);
 PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RESULT *canonical_result , const char *function_name);
 
+/**
+ * Returns a string that represents a Python BoincResult class
+ * initialization for the provided Result.
+ */
+std::string result_init_string(const RESULT& res);
+
+/**
+ * For the given variable_name, output file info data is appended to 
+ * the variable's "output_files" list.
+ */
+void load_paths(const std::string& variable_name, const RESULT& res, void *data);
+
 #endif
