@@ -58,10 +58,13 @@ static void BoincResult_dealloc(BoincResult *self)
   if(self == NULL)
     return;
 
-  //printf("Dealloc'ed \n");
+  printf("Dealloc'ed \n");
+  printf("Name(%s) ref count: %d\n",PyBytes_AsString(self->name),(int)self->name->ob_refcnt);
   Py_XDECREF(self->name);
+  printf("Output file list ref count: %d\n",(int)self->output_files->ob_refcnt);
   Py_XDECREF(self->output_files);
-  self->ob_type->tp_free((PyObject*)self);
+  //self->ob_type->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject*)self);
   
   
 }
@@ -109,7 +112,7 @@ static PyObject* BoincResult_new(PyTypeObject *type, PyObject *args, PyObject *k
   if(obj == NULL)
     return (PyObject*)obj;
 
-  obj->name = PyString_FromString("UNINITIALIZED");
+  obj->name = PyBytes_FromString("UNINITIALIZED");
   if(obj->name == NULL)
     {
       printf("Could not initialize the string: name\n");
@@ -124,20 +127,22 @@ static PyObject* BoincResult_new(PyTypeObject *type, PyObject *args, PyObject *k
       Py_DECREF(obj);
       return NULL;
     }
-  //Py_INCREF(obj->output_files);
 
   obj->appid = 0;
   obj->id = 0;
   obj->exit_status = 0;
   obj->cpu_time = 0.0;
   obj->validate_state = 0;
+
+  printf("When created, result name (%s) ref count: %d\n",PyBytes_AsString(obj->name),(int)obj->name->ob_refcnt);
+
   
   return (PyObject *)obj;
   
 }
 
 
-
+// Returns a new reference
 static int BoincResult_init(BoincResult *self, PyObject *args, PyObject *kwds)
 {
   
@@ -168,9 +173,10 @@ static int BoincResult_init(BoincResult *self, PyObject *args, PyObject *kwds)
   
 }
 
+// Returns a new reference
 PyObject* RESULT2BoincResult(const RESULT& result)
 {
-  PyObject *boincresult, *tmp;
+  PyObject *boincresult, *tmp, *new_name;
   BoincResult *the_struct = NULL;
 
   boincresult = BoincResult_new(&pyboinc_RESULT,NULL,NULL);
@@ -180,8 +186,13 @@ PyObject* RESULT2BoincResult(const RESULT& result)
   the_struct = (BoincResult*)boincresult;
 
     // Set name
+  printf("Initial result name (%s) ref count: %d\n",PyBytes_AsString(the_struct->name),the_struct->name->ob_refcnt);
   tmp = the_struct->name;
-  the_struct->name = PyString_FromString(result.name);
+  new_name = PyBytes_FromString(result.name);
+  printf("When new name is created (%s) ref count: %d\n",PyBytes_AsString(new_name),new_name->ob_refcnt);
+
+  the_struct->name = new_name;
+  printf("New result name (%s) ref count: %d\n",PyBytes_AsString(the_struct->name),the_struct->name->ob_refcnt);
   Py_INCREF(the_struct->name);
   Py_XDECREF(tmp);
 
@@ -196,6 +207,7 @@ PyObject* RESULT2BoincResult(const RESULT& result)
   
 }
 
+// Returns a borrowed reference
 PyObject* import_result(PyObject *module, const char *variable_name, const std::vector<std::string> *paths, const RESULT& result)
 {
   PyObject *retval = NULL;
@@ -224,13 +236,16 @@ PyObject* import_result(PyObject *module, const char *variable_name, const std::
     {
       std::string logical_name,physical_name;
       RESULT non_const_res = result;
+      PyObject *args;
       for(std::vector<std::string>::const_iterator path = paths->begin();path != paths->end();path++)
 	{
 	  physical_name = *path;
 	  if(get_logical_name(non_const_res,physical_name,logical_name) != 0)
 	    printf("WARNING -- Could not get logical name for %s\n",physical_name.c_str());
 	  printf("GOT PATHS: %s, %s\n",path->c_str(),logical_name.c_str());
-	  PyList_Append(the_struct->output_files,Py_BuildValue("(ss)",path->c_str(),logical_name.c_str()));
+	  args = Py_BuildValue("(ss)",path->c_str(),logical_name.c_str());
+	  PyList_Append(the_struct->output_files,args);
+	  Py_XDECREF(args);
 	}
     }
 
@@ -241,6 +256,17 @@ PyObject* import_result(PyObject *module, const char *variable_name, const std::
 
 int init_boinc_result(PyObject *module)
 {
+  // NULL Check
+  if(module == NULL)
+    return 0;
+  
+  // Check to see if the class is already in the module
+  PyObject *item;
+  PyObject *mod_dict = PyModule_GetDict(module);// borrowed reference
+  item = PyDict_GetItemString(mod_dict,pyboinc_RESULT.tp_name);// borrowed reference
+  if(item != NULL)
+    return 0;// already loaded
+  
   pyboinc_RESULT.tp_new = BoincResult_new;
   pyboinc_RESULT.tp_init = (initproc)BoincResult_init;// __init__
   pyboinc_RESULT.tp_members = pyboinc_RESULT_members;
@@ -255,7 +281,7 @@ int init_boinc_result(PyObject *module)
     return 0;
 
   Py_INCREF(&pyboinc_RESULT);
-  PyModule_AddObject(module, "BoincResult", (PyObject *)&pyboinc_RESULT);
+  PyModule_AddObject(module, pyboinc_RESULT.tp_name, (PyObject *)&pyboinc_RESULT);
 
   return 0;
 
@@ -264,9 +290,8 @@ int init_boinc_result(PyObject *module)
 PyObject *py_user_code_on_results(int num_results, const RESULT *r1, void* _data1, RESULT const *r2, void* _data2, const char *function_dict_name)
 {
   int retval = 0;
-  PyObject *main_module = NULL, *main_dict = NULL, *validator_funct = NULL, *funct = NULL, *valid_value = NULL;
+  PyObject *main_module = NULL, *main_dict = NULL, *validator_funct = NULL, *funct_name = NULL, *funct_dict = NULL, *valid_value = NULL, *appid_obj = NULL;
   PyObject *pyresult1, *pyresult2;
-  BoincResult *obj1, *obj2;
   FILE *init_file = NULL;
   const char init_filename[] = "/boinc/projects/stjudeathome/boincdag_init.py";
   
@@ -291,9 +316,6 @@ PyObject *py_user_code_on_results(int num_results, const RESULT *r1, void* _data
       return Py_None;
     }
 
-  obj1 = (BoincResult*)_data1;
-  obj2 = (BoincResult*)_data2;
-  
   init_file = fopen(init_filename,"r");
   if(init_file == NULL)
     {
@@ -344,41 +366,55 @@ PyObject *py_user_code_on_results(int num_results, const RESULT *r1, void* _data
       return Py_None;
     }
   
-  funct = PyObject_GetAttrString(main_module,function_dict_name);
-  if(funct == NULL)
+  funct_dict = PyObject_GetAttrString(main_module,function_dict_name);// dictionary that maps app ids to function names
+  if(funct_dict == NULL)
     {
       ERRORPRINT("Missing %s dict.\n",function_dict_name);
       Py_INCREF(Py_None);
       return Py_None;
     }
-  funct = PyDict_GetItem(funct, PyString_FromFormat("%d",r1->appid));
-  if(funct == NULL)
+  appid_obj = PyUnicode_FromFormat("%d",r1->appid);
+  funct_name = PyDict_GetItem(funct_dict, appid_obj);// function name for this appid
+  Py_DECREF(funct_dict);
+  Py_XDECREF(appid_obj);
+  if(funct_name == NULL)
     {
       fprintf(stderr,"Missing %s for %d.\n",function_dict_name,r1->appid);
       Py_INCREF(Py_None);
       return Py_None;
     }
-  validator_funct = PyObject_GetAttr(main_module, funct);
+  validator_funct = PyObject_GetAttr(main_module, funct_name);
+  Py_XDECREF(funct_name);
   if(validator_funct == NULL)
     {
-      fprintf(stderr,"Missing %s function '%s' for %d.\n",function_dict_name,PyString_AsString(funct),r1->appid);
+      fprintf(stderr,"Missing %s function '%s' for %d.\n",function_dict_name,PyBytes_AsString(funct_name),r1->appid);
       Py_INCREF(Py_None);
       return Py_None;
     }
   if(!PyCallable_Check(validator_funct))
     {
       fprintf(stderr,"Object is not callable.\n");
+      Py_XDECREF(validator_funct);
       Py_INCREF(Py_None);
       return Py_None;
     }
 
   if(num_results == 2)
-    valid_value = PyObject_CallObject(validator_funct,Py_BuildValue("OO",pyresult1, pyresult2));
+    {
+      PyObject *args = Py_BuildValue("(OO)",pyresult1, pyresult2);
+      valid_value = PyObject_CallObject(validator_funct,args);
+      Py_XDECREF(args);
+    }
   else
-    valid_value = PyObject_CallObject(validator_funct,Py_BuildValue("(O)",pyresult1));
+    {
+      PyObject *args = Py_BuildValue("(O)",pyresult1);
+      valid_value = PyObject_CallObject(validator_funct,args);
+      Py_XDECREF(args);
+    }
 
   if(PyErr_Occurred())
     {
+      Py_XDECREF(validator_funct);
       Py_XDECREF(valid_value);
       PyErr_Print();
       Py_INCREF(Py_None);
@@ -387,19 +423,25 @@ PyObject *py_user_code_on_results(int num_results, const RESULT *r1, void* _data
 
   if(valid_value == NULL)
     {
-      fprintf(stderr,"Error running %s (%s).\n",function_dict_name,PyString_AsString(PyObject_GetAttrString(validator_funct,"__name__")));
+      PyObject *name_obj = PyObject_GetAttrString(validator_funct,"__name__");
+      if(name_obj == NULL)
+	name_obj = PyBytes_FromString("NULL");
+      fprintf(stderr,"Error running %s (%s).\n",function_dict_name,PyBytes_AsString(name_obj));
+      Py_XDECREF(name_obj);
+      Py_XDECREF(validator_funct);
+      Py_XDECREF(valid_value);
       Py_INCREF(Py_None);
       return Py_None;
     }
-  
+  Py_XDECREF(validator_funct);
 
-  return valid_value;
+  return valid_value;// returning new reference
 }
 
 PyObject *py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonical_result, const char *function_dict_name)
 {
   int retval = 0, appid;
-  PyObject *main_module = NULL, *main_dict = NULL, *funct_to_run = NULL, *funct = NULL, *valid_value = NULL, *boinctools_mod = NULL;
+  PyObject *main_module = NULL, *main_dict = NULL, *funct_to_run = NULL, *funct_name = NULL, *funct_dict = NULL,*valid_value = NULL, *boinctools_mod = NULL, *args = NULL, *appid_obj = NULL;
   PyObject *boinctools_name = NULL;
   PyObject *boinc_results = NULL;// List of boinc results corresponding to results argument
   PyObject *pycanonical = NULL;// BoincResult for canonical result.
@@ -458,7 +500,7 @@ PyObject *py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonic
       return Py_None;
     }
 
-  boinctools_name = PyString_FromString("boinctools");
+  boinctools_name = PyBytes_FromString("boinctools");
   boinctools_mod = PyImport_Import(boinctools_name);
   Py_XDECREF(boinctools_name);boinctools_name = NULL;
   if(boinctools_mod == NULL)
@@ -487,6 +529,7 @@ PyObject *py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonic
 	  if(PyErr_Occurred())
 	    PyErr_Print();
 
+	  Py_DECREF(boinc_results);
 	  Py_DECREF(boinctools_mod);
 	  Py_INCREF(Py_None);
 	  return Py_None;
@@ -510,60 +553,83 @@ PyObject *py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonic
   if(retval)
     {
       fprintf(stderr,"Error running %s.\n",init_filename);
+      Py_DECREF(boinc_results);
       Py_DECREF(boinctools_mod);
       Py_INCREF(Py_None);
       return Py_None;
     }
   
-  // CHECK THIS FOR Py_INC/DECREF
-  funct = PyObject_GetAttrString(main_module,function_dict_name);
-  if(funct == NULL)
+  funct_dict = PyObject_GetAttrString(main_module,function_dict_name);// new reference. dict that maps app ids to function names
+  if(funct_dict == NULL)
     {
       ERRORPRINT("Missing %s dict.\n",function_dict_name);
+      Py_DECREF(boinc_results);
       Py_DECREF(boinctools_mod);
       Py_INCREF(Py_None);
       return Py_None;
     }
-  funct = PyDict_GetItem(funct, PyString_FromFormat("%d",appid));
-  if(funct == NULL)
+  appid_obj = PyUnicode_FromFormat("%d",appid);
+  funct_name = PyDict_GetItem(funct_dict, appid_obj);// borrowed reference
+  Py_DECREF(funct_dict);
+  Py_XDECREF(appid_obj);
+  if(funct_name == NULL)
     {
       DEBUGPRINT("Missing %s for %d.\n",function_dict_name,appid);
+      Py_DECREF(boinc_results);
       Py_DECREF(boinctools_mod);
       Py_INCREF(Py_None);
       return Py_None;
     }
-  funct_to_run = PyObject_GetAttr(main_module, funct);
+  funct_to_run = PyObject_GetAttr(main_module, funct_name);// new reference
   if(funct_to_run == NULL)
     {
-      ERRORPRINT("Missing %s function '%s' for %d.\n",function_dict_name,PyString_AsString(funct),appid);
+      ERRORPRINT("Missing %s function '%s' for %d.\n",function_dict_name,PyBytes_AsString(funct_name),appid);
+      Py_DECREF(funct_name);
       Py_DECREF(boinctools_mod);
+      Py_DECREF(boinc_results);
       Py_INCREF(Py_None);
       return Py_None;
     }
+  Py_DECREF(funct_name);
+
   if(!PyCallable_Check(funct_to_run))
     {
       fprintf(stderr,"Object is not callable.\n");
+      Py_DECREF(funct_to_run);
+      Py_DECREF(boinc_results);
       Py_DECREF(boinctools_mod);
       Py_INCREF(Py_None);
       return Py_None;
     }
 
-  valid_value = PyObject_CallObject(funct_to_run,Py_BuildValue("(OO)",boinc_results,pycanonical));
+  args = Py_BuildValue("(OO)",boinc_results,pycanonical);
+  valid_value = PyObject_CallObject(funct_to_run,args);
+  Py_XDECREF(args);
   if(PyErr_Occurred())
     {
       Py_XDECREF(valid_value);
       PyErr_Print();
+      Py_DECREF(funct_to_run);
+      Py_DECREF(boinc_results);
       Py_INCREF(Py_None);
       return Py_None;
     }
 
   if(valid_value == NULL)
     {
-      fprintf(stderr,"Error running %s (%s).\n",function_dict_name,PyString_AsString(PyObject_GetAttrString(funct_to_run,"__name__")));
+      PyObject *name_obj = PyObject_GetAttrString(funct_to_run,"__name__");
+      if(name_obj == NULL)
+	name_obj = PyBytes_FromString("NULL");
+      fprintf(stderr,"Error running %s (%s).\n",function_dict_name,PyBytes_AsString(name_obj));
+      Py_XDECREF(name_obj);
+      Py_DECREF(funct_to_run);
+      Py_DECREF(boinctools_mod);
+      Py_DECREF(boinc_results);
       Py_INCREF(Py_None);
       return Py_None;
     }
 
+  Py_DECREF(funct_to_run);
   Py_DECREF(boinctools_mod);
   Py_DECREF(boinc_results);
   Py_DECREF(pycanonical);
@@ -574,7 +640,7 @@ PyObject *py_user_code_on_workunit(std::vector<RESULT>& results, RESULT *canonic
 
 PyObject* py_boinctools_on_result(const RESULT& r, const char *function_name)
 {
-  PyObject *mod = NULL;
+  PyObject *mod = NULL, *mod_name = NULL;
   PyObject *result = NULL;
   const char *module_name = "boinctools";
 
@@ -584,7 +650,9 @@ PyObject* py_boinctools_on_result(const RESULT& r, const char *function_name)
       return Py_None;
     }
 
-  mod = PyImport_Import(PyString_FromString(module_name));
+  mod_name = PyBytes_FromString(module_name);
+  mod = PyImport_Import(mod_name);
+  Py_XDECREF(mod_name);mod_name = NULL;
   if(mod != NULL)
     {
       PyObject *dict, *funct;
@@ -598,9 +666,10 @@ PyObject* py_boinctools_on_result(const RESULT& r, const char *function_name)
 	      result = PyObject_CallFunction(funct,"(s)",r.name);
 	      if((exception = PyErr_Occurred()) != NULL)
 		{
-		  const char *exc_name = PyString_AsString(PyObject_GetAttrString(exception,"__name__"));
+		  const char *exc_name = PyBytes_AsString(PyObject_GetAttrString(exception,"__name__"));
 		  if(exc_name == NULL || strcmp(exc_name,"NoSuchProcess") != 0)
 		    {
+		      Py_XDECREF(result);
 		      Py_XDECREF(mod);
 		      Py_INCREF(Py_None);
 		      return Py_None;
@@ -617,7 +686,7 @@ PyObject* py_boinctools_on_result(const RESULT& r, const char *function_name)
 
 PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RESULT *canonical_result, const char *function_name)
 {
-  PyObject *mod = NULL;
+  PyObject *mod = NULL, *module_name_obj = NULL;
   PyObject *boinc_results = NULL, *pycanonical = NULL;
   PyObject *result = NULL;
   const char *module_name = "boinctools";
@@ -646,17 +715,26 @@ PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RE
 	  fprintf(stderr,"Error occurred importing result.");
 	  if(PyErr_Occurred())
 	    PyErr_Print();
+	  Py_DECREF(boinc_results);
+	  Py_INCREF(Py_None);
 	  return Py_None;
 	}
       PyList_Append(boinc_results,pyresult);
     }
 
   if(canonical_result == NULL)
-    pycanonical = Py_None;
+    {
+      pycanonical = Py_None;
+      Py_INCREF(pycanonical);
+    }
   else
-    pycanonical = RESULT2BoincResult(*canonical_result);
+    {
+      pycanonical = RESULT2BoincResult(*canonical_result);
+    }
 
-  mod = PyImport_Import(PyString_FromString(module_name));
+  module_name_obj = PyBytes_FromString(module_name);
+  mod = PyImport_Import(module_name_obj);
+  Py_DECREF(module_name_obj);
   if(mod != NULL)
     {
       PyObject *dict, *funct;
@@ -670,17 +748,44 @@ PyObject* py_boinctools_on_workunit(const std::vector<RESULT>& results, const RE
 	      result = PyObject_CallFunction(funct,"(OO)",boinc_results,pycanonical);
 	      if((exception = PyErr_Occurred()) != NULL)
 		{
-		  const char *exc_name = PyString_AsString(PyObject_GetAttrString(exception,"__name__"));
+		  const char *exc_name = PyBytes_AsString(PyObject_GetAttrString(exception,"__name__"));
 		  if(exc_name == NULL || strcmp(exc_name,"NoSuchProcess") != 0)
 		    {
+		      Py_XDECREF(pycanonical);
+		      Py_DECREF(boinc_results);
 		      Py_XDECREF(mod);
+		      Py_XDECREF(result);
+		      Py_INCREF(Py_None);
 		      return Py_None;
 		    }
 		}
 	    }
 	}
-      Py_XDECREF(mod);
     }
+  Py_XDECREF(mod);
+  Py_XDECREF(pycanonical);
+  Py_DECREF(boinc_results);
 
   return result;
 }
+
+
+bool python_initialized = false;
+void initialize_python()
+{
+  if(python_initialized)
+    return;
+  
+  Py_Initialize();
+  python_initialized = true;
+}
+
+void finalize_python()
+{
+  if(!python_initialized)
+    return;
+  
+  Py_Finalize();
+  python_initialized = false;
+}
+

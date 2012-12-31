@@ -25,12 +25,13 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
 {
   PyObject *retval;
 
-  Py_Initialize();
+  initialize_python();
   
   retval = py_user_code_on_workunit(results, &canonical_result, "assimilators");
   if(retval == NULL)
     {
       fprintf(stderr,"[%s:%d] There was a python error when assimilating %s.\nExiting.\n",__FILE__,__LINE__,canonical_result.name);
+      finalize_python();
       exit(1);
     }
   Py_DECREF(retval);
@@ -39,12 +40,10 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
     {
       printf("Assimilation failed\n");
       PyErr_Print();
-      Py_Finalize();
+      finalize_python();
       return 1;
     }
   
-  Py_Finalize();
-
   return 0;
 
 

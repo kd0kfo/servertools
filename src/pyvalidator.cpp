@@ -30,6 +30,7 @@
 
 #include "pyboinc.h"
 
+
 /**
  * Takes a RESULT objects and initializes the data set for it.
  *
@@ -41,12 +42,13 @@
 int init_result(RESULT& result, void*& data) 
 {
   OUTPUT_FILE_INFO fi;
-  PyObject *main_module = NULL, *main_dict = NULL, *boincresult, *boinctools_mod = NULL;
+  PyObject *main_module = NULL, *main_dict = NULL, *module_name = NULL, *boincresult, *boinctools_mod = NULL;
   std::vector<std::string> *paths;
   int retval = 0;
   
   paths = new std::vector<std::string>;
-  Py_Initialize();
+
+  initialize_python();
 
   main_module = PyImport_AddModule("__main__");
   if(main_module == NULL)
@@ -54,7 +56,6 @@ int init_result(RESULT& result, void*& data)
       fprintf(stderr,"Could not add module __main__\n");
       if(errno)
 	fprintf(stderr,"Reason: %s\n",strerror(errno));
-      Py_Finalize();
       return ERR_OPENDIR;
     }
 
@@ -66,7 +67,6 @@ int init_result(RESULT& result, void*& data)
       fprintf(stderr,"Could not get globals.\n");
       if(errno)
 	fprintf(stderr,"Reason: %s\n",strerror(errno));
-      Py_Finalize();
       return ERR_OPENDIR;
     }
 
@@ -79,7 +79,13 @@ int init_result(RESULT& result, void*& data)
 
   printf("Marking Process as closed.\n");
   
-  boinctools_mod = PyImport_Import(PyString_FromString("boinctools"));
+#if PY_MAJOR_VERSION >= 3
+  module_name = PyBytes_FromString("boinctools");
+#else
+  module_name = PyString_FromString("boinctools");
+#endif
+  boinctools_mod = PyImport_Import(module_name);
+  Py_XDECREF(module_name);
   if(boinctools_mod != NULL)
     {
       PyObject *dict, *funct, *exception = NULL;
@@ -95,12 +101,18 @@ int init_result(RESULT& result, void*& data)
 	      if((exception = PyErr_Occurred()) != NULL)
 		{
 		  PyObject *excpt = PyObject_GetAttrString(exception,"__name__");
-		  const char *exc_name = PyString_AsString(excpt);
+		  const char *exc_name;
+#if PY_MAJOR_VERSION >= 3		
+		  exc_name = PyBytes_AsString(excpt);
+#else
+		  exc_name = PyString_AsString(excpt);
+#endif
 		  Py_XDECREF(excpt);
 		  if(exc_name == NULL || strcmp(exc_name,"NoSuchProcess") != 0)
 		    {
 		      printf("Python Exception (%s) happened\n",(exc_name)?exc_name : "NULL");
 		      PyErr_Print();
+		      finalize_python();
 		      exit(1);
 		    }
 		}
@@ -110,7 +122,13 @@ int init_result(RESULT& result, void*& data)
 		  PyObject *str_rep = PyObject_Str(pyresult);
 		  if(str_rep != NULL)
 		    {
-		      printf("Result: %s\n",PyString_AsString(str_rep));
+		      char *str_rep_as_str;
+#if PY_MAJOR_VERSION >= 3
+		      str_rep_as_str = PyBytes_AsString(str_rep);
+#else
+		      str_rep_as_str = PyString_AsString(str_rep);
+#endif
+		      printf("Result: %s\n",str_rep_as_str);
 		      Py_DECREF(str_rep);
 		    }
 		}
@@ -119,8 +137,6 @@ int init_result(RESULT& result, void*& data)
 	}
       Py_XDECREF(boinctools_mod);
     }
-
-  Py_Finalize();
 
   return retval;
 }
@@ -132,19 +148,19 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
 {
   PyObject *retval;
 
-  Py_Initialize();
+  initialize_python();
   
   retval = py_user_code_on_results(2,&r1,_data1,&r2,_data2,"validators");
   if(retval == Py_None || retval == NULL)
     {
       fprintf(stderr,"There was a python error when validating %s.\nExiting.\n",r1.name);
+      finalize_python();
       exit(1);
     }
   
   match = (PyObject_IsTrue(retval));
 
   Py_XDECREF(retval);
-  Py_Finalize();
 
   return 0;
 }
@@ -157,16 +173,17 @@ int compare_results(RESULT& r1, void* _data1, RESULT const&  r2, void* _data2, b
  */
 int cleanup_result(RESULT const& r, void* data) 
 {
-  PyObject *retval = Py_None;
-  PyObject *result = Py_None;
+  PyObject *retval = NULL;
+  PyObject *result = NULL;
 
-  Py_Initialize();
+  initialize_python();
 
-  retval = py_user_code_on_results(1,&r,data,&r,NULL,"cleaners");
+  retval = py_user_code_on_results(1,&r,data,NULL,NULL,"cleaners");
 
   if(retval == Py_None || retval == NULL)
     {
       fprintf(stderr,"There was a python error when cleaning %s.\nExiting.\n",r.name);
+      finalize_python();
       exit(1);
     }
   Py_DECREF(retval);
@@ -178,7 +195,6 @@ int cleanup_result(RESULT const& r, void* data)
     {
       printf("%s.%s failed\n","boinctools","continue_children");
       PyErr_Print();
-      Py_Finalize();
       if(data != NULL)
 	{
 	  delete (std::vector<std::string>*)data;
@@ -188,8 +204,6 @@ int cleanup_result(RESULT const& r, void* data)
       return 1;
     }
   
-  Py_Finalize();
-
   if(data != NULL)
     {
       delete (std::vector<std::string>*)data;
