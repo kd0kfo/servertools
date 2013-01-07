@@ -27,6 +27,9 @@ class BoincResult():
         self.validate_state = validate_state
         self.cpu_time = cpu_time
 
+    def __str__(self):
+        return "Name: {0}\nID: {1}\nApp ID: {2}\nExit Status: {3}\nValidate State: {4}\nCPU Time: {5}".format(self.name,self.id,self.appid,self.exit_status,self.validate_state,self.cpu_time)
+
     def add_output_file(self,path,logical_name):
         file_tuple = (path,logical_name)
         self.output_files.append(file_tuple)
@@ -244,12 +247,30 @@ def clean(result):
 def assimilator(result_list,canonical_result):
     import os.path as OP
 
-    print("Assimilating %d results")
+    print("Assimilating %d results" % len(result_list))
+    print("Canonical Result: %s" % canonical_result)
     init_filename = OP.join(project_path,"boincdag_init.py")
     variables = {}
     execfile(init_filename, variables)
 
-    function_name = variables['assimilators'][str(canonical_result.appid)]
+    # Get Assimilator
+    if not 'assimilators' in variables.keys():
+        raise BoincException("Error - 'assimilators' is not a defined dict.")
+    assimilators = variables['assimilators']
+
+    # Get appid
+    if canonical_result.id:
+        appid = str(canonical_result.appid)
+    else:
+        if not result_list:
+            raise BoincException("Error - There are no results provided to the assembler.")
+        appid = str(result_list[0].appid)
+    if not appid in assimilators:
+        raise BoincException("Error - There is no assimilator defined for app #%s" % appid)
+
+    function_name = assimilators[appid]
+    if not function_name in variables:
+        raise BoincException("Error - '%s' is not a defined function." % function_name)
     function = variables[function_name]
     function(result_list,canonical_result)
 

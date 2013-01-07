@@ -80,8 +80,8 @@ int assimilate_handler(WORKUNIT& wu, std::vector<RESULT>& results, RESULT& canon
 	}
     }
   
-  
-  if(PyRun_SimpleString("boinctools.assimilator(results,canonical)"))
+  command = "boinctools.assimilator(results,canonical)";
+  if(PyRun_SimpleString(command.c_str()))
     {
       fprintf(stderr,"Could not assimilate result objects.\n");
       fprintf(stderr,"Python command: %s",command.c_str());
