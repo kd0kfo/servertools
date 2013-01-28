@@ -1,6 +1,7 @@
 def update_dag_job_state(result,is_valid):
 	import dag.boinc
 	from dag import States,strstate
+	import dag
 
 	root_dag = dag.boinc.result_to_dag(result.name)
 	if not root_dag:
@@ -17,8 +18,11 @@ def update_dag_job_state(result,is_valid):
 	else:
 		proc.state = States.FAIL
 	print("Marking %s as %s" % (result.name, strstate(proc.state)))
-	root_dag.save()
-	
+	try:
+		root_dag.save()
+	except dag.DagException as de:
+		print("Could not save dag file '%s'" % root_dag.filename)
+		raise de
 
 def validate(result1, result2):
 	import dag.util as dagu
@@ -26,6 +30,8 @@ def validate(result1, result2):
 	import re
 	from os import path as OP
 	import os
+
+	print("Validating %s & %s" % (result1.name, result2.name))
 
 	output_file1 = result1.output_files[0][0]
 	output_file2 = result2.output_files[0][0]
@@ -50,13 +56,29 @@ def validate(result1, result2):
 ## 		valid = False
 ## 		update_dag_job_state(result1,valid)
 ## 		return valid
+
+	# If BOTH are empty results, no output was produced -> Consensus
+	# If one or the other is empty, but not both, no Consensus
 	if not OP.isfile(output_file1) and not OP.isfile(output_file2):
 		valid = True
-		update_dag_job_state(result1,valid)
+		try:
+			update_dag_job_state(result1,valid)
+		except dagu.NoDagMarkerException as ndme:
+			print("Warning: Dag Marker not found.")
+			print("Message:")
+			print(ndme.message)
  		return valid
-	
+	if not OP.isfile(output_file1) or not OP.isfile(output_file2):
+		valid = False
+		try:
+			update_dag_job_state(result1,valid)
+		except dagu.NoDagMarkerException as ndme:
+			print("Warning: Dag Marker not found.")
+			print("Message:")
+			print(ndme.message)
+		return valid	
 
-	valid = (OP.getsize(result1.output_files[0][0]) == OP.getsize(result2.output_files[0][0]))
+	valid = (OP.getsize(output_file1) == OP.getsize(output_file2))
 
 	if not valid:
 		print("File sizes differ")
@@ -65,11 +87,49 @@ def validate(result1, result2):
 
 	try:
 		update_dag_job_state(result1,valid)
+	except dagu.NoDagMarkerException as ndme:
+		print("Warning: Dag Marker not found.")
+		print("Message:")
+		print(ndme.message)
 	except dag.MissingDAGFile as mdf:
 		print("Missing dag file for result '%s'. Skipping process update." % result1.name)
-		return False
+		return True# True to move on and give the volunteer credit
 
 	return valid
+
+
+## This function prints the number of instances of each class
+##
+## Example usage:
+## refcounts = get_refcounts()
+## start = 50
+## if start > len(refcounts):
+## 	start = 0
+## end = 100
+## if end > len(refcounts):
+## 	end = len(refcounts)
+## print("Ref counts[%d - %d]:" % (start,end))
+## for n,c in refcounts[start:end]:
+## 	print("%10d %s" % (n,c.__name__))
+## print("End Ref counts")
+#
+def get_refcounts(): 
+    import sys
+    import types
+    
+    d = {}
+    sys.modules
+    # collect all classes
+    for m in sys.modules.values():
+	for sym in dir(m):
+	    o = getattr (m, sym)
+	    if type(o) is types.ClassType:
+		d[o] = sys.getrefcount (o)
+    # sort by refcount
+    pairs = map (lambda x: (x[1],x[0]), d.items())
+    pairs.sort()
+    pairs.reverse()
+    return pairs
 
 def clean(result):
 	import re
@@ -81,8 +141,13 @@ def clean(result):
 	from os import path as OP
 	import os
 
-	print("Cleaning %s" % result.name)
-	
+	if len(result.name) >= 2:
+		if result.name[-2:] != "_0":
+			print("Not cleaning %s" % result.name)
+			return True
+
+    	print("Cleaning %s" % result.name)
+
 	wuname = re.findall(r"^(.*)_\d*$",result.name)
 	if len(wuname) == 0:
 		print("Malformed result name")
@@ -91,7 +156,10 @@ def clean(result):
 	try:
 		the_dag = dag.boinc.result_to_dag(result.name)
 	except dag_utils.NoDagMarkerException as ndme:
-		print("Missing dag %s\nSkipping clean up")
+		print("Warning: Missing dag")
+		print("Skipping clean up" )
+		print("Message:")
+		print(ndme.message)
 		return False
 	except dag.MissingDAGFile as mdf:
 		print("Missing dag file for result '%s'. Attempting to move output to invalid_results directory" % result.name)
@@ -175,4 +243,3 @@ def assimilator(results, canonical_result):
 	if results:
 		print("Have %d results. Exit code of first: %d" % (results[0].exit_status, canonical_result.exit_status))
 	
-	return None
