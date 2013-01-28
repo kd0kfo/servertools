@@ -248,7 +248,6 @@ def assimilator(result_list,canonical_result):
     import os.path as OP
 
     print("Assimilating %d results" % len(result_list))
-    print("Canonical Result: %s" % canonical_result)
     init_filename = OP.join(project_path,"boincdag_init.py")
     variables = {}
     execfile(init_filename, variables)
