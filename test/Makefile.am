@@ -6,4 +6,5 @@ unittest_LDFLAGS = $(BOINC_LDFLAGS)
 unittest_LDADD = $(BOINC_LIBS) $(MYSQL_LIBS) $(PYTHON_LDFLAGS)
 
 test: unittest
-	./unittest
+	echo "project_path = '"${PWD}"'" > local_boinc_settings.py
+	PYTHONPATH=${PWD}/../python:${PWD} ./unittest

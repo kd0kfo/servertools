@@ -9,7 +9,7 @@ boinctools
 This python module provides interface between BOINC C API and Python user code.
 """
 
-project_path = '/boinc/projects/stjudeathome'
+from local_boinc_settings import project_path
 
 class BoincException(Exception):
     """
