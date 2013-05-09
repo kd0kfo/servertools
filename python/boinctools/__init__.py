@@ -155,7 +155,7 @@ def cancel_workunits(workunit_names):
 
     os.chdir(orig_pwd)
 
-def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
+def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames,delay_bounds = None):
     """
     Creates a Workunit by calling create_work with the provided parameters.
 
@@ -176,7 +176,11 @@ def schedule_work(cmd,workunit_name,wu_tmpl,res_tmpl,input_filenames):
     
     orig_pwd = os.getcwd()
     os.chdir(project_path)
-    cmd_args = "--appname %s --wu_name %s --wu_template templates/%s --result_template templates/%s" % (cmd, workunit_name, wu_tmpl, res_tmpl)
+
+    delay_bound_clause = ""
+    if delay_bounds != None:
+        delay_bound_clause = " --delay_bound {0}".format(delay_bounds)
+    cmd_args = "--appname {0} --wu_name {1} --wu_template templates/{2} --result_template templates/{3}".format(cmd, workunit_name, wu_tmpl, res_tmpl,delay_bound_clause)
     for input_file in input_filenames:
         cmd_args += " %s" % input_file
     cmd_list = [OP.join( OP.join(project_path,"bin") ,"create_work")]
