@@ -56,6 +56,7 @@ AS_IF([test -z "$PYTHON_LDFLAGS"], [
   ])
   AC_MSG_CHECKING([python ldflags])
   PYTHON_LDFLAGS=`$PYTHON_CONFIG --ldflags`
+  PYTHON_LDFLAGS="$PYTHON_LDFLAGS -L$($PYTHON_CONFIG --prefix)/lib"
   AC_MSG_RESULT([$PYTHON_LDFLAGS])
 ])
 
