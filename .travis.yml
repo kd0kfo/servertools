@@ -1,14 +1,13 @@
-language: python
-    - "2.7"
 branches:
     only:
         - travis-ci
 before_install:
-    - sudo apt-get install libmysqlclient-dev python-dev
-    - git clone https://github.com/kd0kfo/boinc.git BOINCSRC
-    - ./build_boinc.sh BOINCSRC
-install:
-    - pip install -r requirements.txt 
+    - sudo apt-get install libmysqlclient-dev python-dev libtool libcurl-dev
+    - git clone https://github.com/kd0kfo/boinc.git /opt/boinc
+    - ./build_boinc.sh /opt/boinc
 script:
+    - ./configure --with-boinc=/opt/boinc/INSTALLDIR
+    - make
+    - make install
     - python setup.py install
     - python setup.py test
