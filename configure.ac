@@ -5,7 +5,7 @@ AC_PREREQ(2.50)
 AC_INIT([Grid Tools], [0.16.4], [David.Coss@stjude.org])
 AC_CONFIG_SRCDIR([src])
 AM_CONFIG_HEADER([config.h])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 
 #templates
 AH_TEMPLATE([USE_BOINC],[Define to use the BOINC library])
