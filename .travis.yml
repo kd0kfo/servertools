@@ -11,6 +11,7 @@ script:
     - ./setup
     - ./configure --with-boinc=$HOME/boinc/INSTALLDIR
     - make
-    - make install
-    - python setup.py install
+    - sudo make install
+    - python setup.py build
+    - sudo python setup.py install
     - python setup.py test
