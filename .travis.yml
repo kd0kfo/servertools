@@ -4,8 +4,10 @@ python:
 before_install:
     - sudo apt-get install libmysqlclient-dev python-dev libtool libcurl4-openssl-dev
     - git clone https://github.com/kd0kfo/boinc.git $HOME/boinc
-    - ./build_boinc.sh $HOME/boinc
+    - sh ./build_boinc.sh $HOME/boinc
+install: pwd
 script:
+    - ./setup
     - ./configure --with-boinc=$HOME/boinc/INSTALLDIR
     - make
     - make install
