@@ -2,7 +2,7 @@ language: python
 python:
     - "2.7"
 before_install:
-    - sudo apt-get install libmysqlclient-dev python-dev libtool libcurl-dev
+    - sudo apt-get install libmysqlclient-dev python-dev libtool libcurl4-openssl-dev
     - git clone https://github.com/kd0kfo/boinc.git /opt/boinc
     - ./build_boinc.sh /opt/boinc
 script:
