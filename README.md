@@ -17,6 +17,11 @@ Requires
 
 This code embeds Python in the BOINC validation and assimilation programs, which are written in C. To do this, the development package of Python is required. This may be obtained from your OS distribution repositories, i.e. yum or apt-get, or from the Python website, http://www.python.org. Currently, this code has only been used with Python 2.7.
 
+Build Status
+------------
+
+[![Build Status](https://travis-ci.org/kd0kfo/servertools.png?branch=master)](https://travis-ci.org/kd0kfo/servertools)
+
 Documentation
 -------------
 
