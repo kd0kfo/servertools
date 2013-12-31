@@ -1,9 +1,6 @@
 language: python
 python:
     - "2.7"
-branches:
-    only:
-        - travis-ci
 before_install:
     - sudo apt-get install libmysqlclient-dev python-dev libtool libcurl-dev
     - git clone https://github.com/kd0kfo/boinc.git /opt/boinc
