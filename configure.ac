@@ -111,7 +111,7 @@ AM_CONDITIONAL([MAKE_BOINC_PROGRAMS],[test x$with_boinc != x])
 if test x$with_boinc != x; then
 	AM_CONDITIONAL([MAKE_BOINC_PROGRAMS],[test x$with_boinc != xno])
 	if test x$with_boinc != xno;then 
-   		AC_SUBST(BOINC_CPPFLAGS,"-I$with_boinc/include/  -I$with_boinc/boinc/ -I$with_boinc/boinc/api/ -I$with_boinc/boinc/lib/ -I$with_boinc/boinc/sched/ -I$with_boinc/boinc/db/ ")
+   		AC_SUBST(BOINC_CPPFLAGS,"-I$with_boinc/include/ -I$with_boinc/include/boinc  -I$with_boinc/boinc/ -I$with_boinc/boinc/api/ -I$with_boinc/boinc/lib/ -I$with_boinc/boinc/sched/ -I$with_boinc/boinc/db/ ")
    		AC_SUBST(BOINC_LIBS,"$with_boinc/lib/libsched.a $with_boinc/lib/libboinc_crypt.a $with_boinc/lib/libboinc_api.a $with_boinc/lib/libboinc.a $with_pthread")
    		AC_SUBST(BOINC_LDFLAGS,"-L$with_boinc/lib")
    		AC_DEFINE([USE_BOINC],[1])
