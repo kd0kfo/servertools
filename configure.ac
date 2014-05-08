@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
-AC_INIT([Grid Tools], [0.16.4], [David.Coss@stjude.org])
+AC_INIT([Grid Tools], [1.0.0], [David.Coss@stjude.org])
 AC_CONFIG_SRCDIR([src])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([foreign])
