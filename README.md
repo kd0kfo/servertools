@@ -22,6 +22,11 @@ Build Status
 
 [![Build Status](https://travis-ci.org/kd0kfo/servertools.png?branch=master)](https://travis-ci.org/kd0kfo/servertools)
 
+Testing
+-------
+
+The tests currently build and test the C++ code and build the python code. There is no test for the python code, because it requires a BOINC server. Testing may be done by running "make test" or completely building from scratch in a VM environment in the vagranttest directory using Vagrant. To test using vagrant, simply run "vagrant up".
+
 Documentation
 -------------
 
