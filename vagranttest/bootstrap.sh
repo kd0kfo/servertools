@@ -17,6 +17,10 @@ echo Building Boinc
 if [[ ! -f ltmain.sh ]];then
 	cp /usr/share/libtool/config/ltmain.sh .
 fi
+REVISION=master
+if [[ -f /vagrant/revision ]];then
+	read REVISION < /vagrant/revision
+fi
 if [[ ! -d boinc ]];then
 	if [[ -d /vagrant/boinc ]];then
 		git clone /vagrant/boinc
@@ -24,7 +28,7 @@ if [[ ! -d boinc ]];then
 		git clone https://github.com/kd0kfo/boinc.git
 	fi
 	cd boinc
-	git checkout client_release/7.4/7.3.19 
+	git checkout $REVISION
 	cd ..
 fi
 sh ./build_boinc.sh $PWD/boinc
