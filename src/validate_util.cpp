@@ -23,23 +23,26 @@
 #include <cstring>
 #include "config.h"
 
-#include "boinc/error_numbers.h"
-#include "boinc/parse.h"
-#include "boinc/util.h"
-#include "boinc/filesys.h"
+#include "error_numbers.h"
+#include "filesys.h"
+#include "parse.h"
+#include "str_replace.h"
+#include "util.h"
 
-#include "boinc/sched_util.h"
-#include "boinc/sched_config.h"
-#include "boinc/sched_msgs.h"
+#include "sched_util.h"
+#include "sched_config.h"
+#include "sched_msgs.h"
 #include "validator.h"
 #include "validate_util.h"
 
 using std::vector;
 using std::string;
 
+bool standalone = false;
+
 ////////// functions for locating output files ///////////////
 
-int FILE_INFO::parse(XML_PARSER& xp) {
+int OUTPUT_FILE_INFO::parse(XML_PARSER& xp) {
     bool found=false;
     optional = false;
     no_validate = false;
@@ -58,8 +61,8 @@ int FILE_INFO::parse(XML_PARSER& xp) {
     return ERR_XML_PARSE;
 }
 
-int get_output_file_info(RESULT& result, FILE_INFO& fi) {
-    char path[1024];
+int get_output_file_info(RESULT& result, OUTPUT_FILE_INFO& fi) {
+    char path[MAXPATHLEN];
     string name;
     MIOFILE mf;
     mf.init_buf_read(result.xml_doc_in);
@@ -69,9 +72,14 @@ int get_output_file_info(RESULT& result, FILE_INFO& fi) {
         if (xp.match_tag("file_ref")) {
             int retval = fi.parse(xp);
             if (retval) return retval;
-            dir_hier_path(
-                fi.name.c_str(), config.upload_dir, config.uldl_dir_fanout, path
-            );
+            if (standalone) {
+                safe_strcpy(path, fi.name.c_str());
+            } else {
+                dir_hier_path(
+                    fi.name.c_str(), config.upload_dir,
+                    config.uldl_dir_fanout, path
+                );
+            }
             fi.path = path;
             return 0;
         }
@@ -79,8 +87,8 @@ int get_output_file_info(RESULT& result, FILE_INFO& fi) {
     return ERR_XML_PARSE;
 }
 
-int get_output_file_infos(RESULT& result, vector<FILE_INFO>& fis) {
-    char path[1024];
+int get_output_file_infos(RESULT& result, vector<OUTPUT_FILE_INFO>& fis) {
+    char path[MAXPATHLEN];
     MIOFILE mf;
     string name;
     mf.init_buf_read(result.xml_doc_in);
@@ -89,12 +97,17 @@ int get_output_file_infos(RESULT& result, vector<FILE_INFO>& fis) {
     while (!xp.get_tag()) {
         if (!xp.is_tag) continue;
         if (xp.match_tag("file_ref")) {
-            FILE_INFO fi;
+            OUTPUT_FILE_INFO fi;
             int retval =  fi.parse(xp);
             if (retval) return retval;
-            dir_hier_path(
-                fi.name.c_str(), config.upload_dir, config.uldl_dir_fanout, path
-            );
+            if (standalone) {
+                safe_strcpy(path, fi.name.c_str());
+            } else {
+                dir_hier_path(
+                    fi.name.c_str(), config.upload_dir,
+                    config.uldl_dir_fanout, path
+                );
+            }
             fi.path = path;
             fis.push_back(fi);
         }
@@ -103,7 +116,7 @@ int get_output_file_infos(RESULT& result, vector<FILE_INFO>& fis) {
 }
 
 int get_output_file_path(RESULT& result, string& path) {
-    FILE_INFO fi;
+    OUTPUT_FILE_INFO fi;
     int retval = get_output_file_info(result, fi);
     if (retval) return retval;
     path = fi.path;
@@ -111,7 +124,7 @@ int get_output_file_path(RESULT& result, string& path) {
 }
 
 int get_output_file_paths(RESULT& result, vector<string>& paths) {
-    vector<FILE_INFO> fis;
+    vector<OUTPUT_FILE_INFO> fis;
     int retval = get_output_file_infos(result, fis);
     if (retval) return retval;
     paths.clear();
@@ -142,17 +155,17 @@ struct FILE_REF {
 // given a path returned by the above, get the corresponding logical name
 //
 int get_logical_name(RESULT& result, string& path, string& name) {
-    char phys_name[1024];
+    char buf[1024], phys_name[1024];
     MIOFILE mf;
     int retval;
 
     mf.init_buf_read(result.xml_doc_in);
     XML_PARSER xp(&mf);
 
-    strcpy(phys_name, path.c_str());
-    char* p = strrchr(phys_name, '/');
+    safe_strcpy(buf, path.c_str());
+    char* p = strrchr(buf, '/');
     if (!p) return ERR_NOT_FOUND;
-    strcpy(phys_name, p+1);
+    safe_strcpy(phys_name, p+1);
 
     while (!xp.get_tag()) {
         if (!xp.is_tag) continue;
@@ -188,4 +201,4 @@ int get_credit_from_wu(WORKUNIT& wu, vector<RESULT>&, double& credit) {
     return ERR_XML_PARSE;
 }
 
-const char *BOINC_RCSID_07049e8a0e = "$Id: validate_util.cpp 23978 2011-08-10 17:11:08Z davea $";
+const char *BOINC_RCSID_07049e8a0e = "$Id$";
