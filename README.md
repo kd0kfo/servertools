@@ -17,7 +17,7 @@ Requires
 
 This code embeds Python in the BOINC validation and assimilation programs, which are written in C. To do this, the development package of Python is required. This may be obtained from your OS distribution repositories, i.e. yum or apt-get, or from the Python website, http://www.python.org. Currently, this code has only been used with Python 2.7.
 
-C code is linked against the BOINC API. Only the latest release version is supported. Building against the development head of the BOINC git repository is not supported because unexpected changes in the API can sometimes be hard to follow. Therefore, only release tags are followed. The recent tag "client_release/7.4/7.3.19" pasts the test with Vagrant (see Testing).
+C code is linked against the BOINC API. Server tools development attempts to follow the development version of BOINC. The most recent tested BOINC source commit is "8c5e6f9daf1", which was tested on a CentOS 6.5 machine using Vagrant (see Testing).
 
 Build Status
 ------------
