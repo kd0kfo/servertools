@@ -3,7 +3,7 @@
 from distutils.core import setup
  
 setup (name ='boinctools',
-       version = '1.0.1',
+       version = '1.0.2',
        description = 'Server tools for BOINC',
        author = 'David Coss, PhD',
        author_email = 'David.Coss@stjude.org',
